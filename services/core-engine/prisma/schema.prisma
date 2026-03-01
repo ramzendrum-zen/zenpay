@@ -1,0 +1,271 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Merchant {
+  id              String           @id @default(cuid())
+  name            String
+  publicKey       String           @unique
+  secretKeyHash   String
+  status          MerchantStatus   @default(ACTIVE)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  businessName    String?
+  email           String           @unique
+  emailVerified   Boolean          @default(false)
+  otpCode         String?
+  otpExpiry       DateTime?
+  passwordHash    String
+  secretKey       String?
+  apiKeys         ApiKey[]
+  apiLogs         ApiLog[]
+  idempotencyKeys IdempotencyKey[]
+  orders          Order[]
+  webhooks        Webhook[]
+}
+
+model ApiKey {
+  id            String    @id @default(cuid())
+  merchantId    String
+  publicKey     String    @unique
+  secretKeyHash String
+  environment   String    @default("live")
+  createdAt     DateTime  @default(now())
+  revokedAt     DateTime?
+  lastUsedAt    DateTime?
+  secretKey     String?
+  name          String    @default("Production Key")
+  merchant      Merchant  @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+}
+
+model Webhook {
+  id         String   @id @default(cuid())
+  merchantId String
+  url        String
+  events     String[]
+  secret     String
+  status     String   @default("active")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+}
+
+model ApiLog {
+  id           String   @id @default(cuid())
+  merchantId   String
+  endpoint     String
+  method       String
+  statusCode   Int
+  requestBody  String?
+  responseBody String?
+  createdAt    DateTime @default(now())
+  merchant     Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+}
+
+model User {
+  id                 String          @id @default(cuid())
+  name               String?
+  email              String          @unique
+  upiId              String          @unique
+  status             String          @default("ACTIVE")
+  createdAt          DateTime        @default(now())
+  passwordHash       String          @default("")
+  transactionPinHash String?
+  failedPinAttempts  Int             @default(0)
+  lockedUntil        DateTime?
+  cards              Card[]
+  ledgerEntries      LedgerEntries[]
+  payments           Payment[]
+}
+
+model Card {
+  id          String   @id @default(cuid())
+  userId      String
+  cardNumber  String   @unique
+  expiryMonth Int
+  expiryYear  Int
+  cvvHash     String
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  merchantId     String
+  amountPaise    Int
+  currency       String      @default("INR")
+  receipt        String?
+  status         OrderStatus @default(PENDING)
+  idempotencyKey String?     @unique
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  expiresAt      DateTime?
+  merchant       Merchant    @relation(fields: [merchantId], references: [id])
+  payments       Payment[]
+
+  @@index([merchantId])
+}
+
+model Payment {
+  id              String                   @id @default(cuid())
+  orderId         String
+  userId          String
+  method          String
+  status          PaymentStatus            @default(CREATED)
+  amountPaise     Int
+  riskScore       Float?                   @default(0.0)
+  signature       String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  authorizationId String?
+  capturedAt      DateTime?
+  failedReason    String?
+  refundedPaise   Int                      @default(0)
+  chargebacks     Chargeback[]
+  order           Order                    @relation(fields: [orderId], references: [id])
+  user            User                     @relation(fields: [userId], references: [id])
+  transitions     PaymentStateTransition[]
+  refunds         Refund[]
+
+  @@index([orderId])
+  @@index([userId])
+}
+
+model LedgerEntries {
+  id            String        @id @default(cuid())
+  userId        String
+  type          LedgerType
+  amountPaise   Int
+  referenceType ReferenceType
+  referenceId   String
+  balanceAfter  Int
+  createdAt     DateTime      @default(now())
+  user          User          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([referenceId])
+}
+
+model WebhookDelivery {
+  id          String    @id @default(cuid())
+  merchantId  String
+  eventId     String    @unique
+  event       String
+  payload     String
+  status      String    @default("PENDING")
+  attempts    Int       @default(0)
+  url         String
+  signature   String
+  timestamp   String
+  nextRetryAt DateTime?
+  lastError   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([merchantId])
+  @@index([status])
+}
+
+model IdempotencyKey {
+  id           String   @id @default(cuid())
+  merchantId   String
+  key          String
+  requestHash  String?
+  responseBody String?
+  status       String   @default("PROCESSED")
+  createdAt    DateTime @default(now())
+  merchant     Merchant @relation(fields: [merchantId], references: [id])
+
+  @@unique([merchantId, key])
+  @@index([merchantId, key])
+}
+
+model Refund {
+  id          String    @id @default(cuid())
+  paymentId   String
+  amountPaise Int
+  status      String    @default("PENDING")
+  reason      String?
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+  payment     Payment   @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
+}
+
+model Chargeback {
+  id          String   @id @default(cuid())
+  paymentId   String
+  amountPaise Int
+  reason      String?
+  status      String   @default("OPEN")
+  createdAt   DateTime @default(now())
+  payment     Payment  @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
+}
+
+model PaymentStateTransition {
+  id         String   @id @default(cuid())
+  paymentId  String
+  fromStatus String
+  toStatus   String
+  reason     String?
+  timestamp  DateTime @default(now())
+  actor      String   @default("system")
+  payment    Payment  @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
+}
+
+enum MerchantStatus {
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  CREATED
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+  REVERSED
+  CHARGEBACK
+}
+
+enum LedgerType {
+  DEBIT
+  CREDIT
+}
+
+enum ReferenceType {
+  ORDER
+  PAYMENT
+  REFUND
+  TRANSFER
+  WITHDRAWAL
+  CHARGEBACK
+}

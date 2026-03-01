@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+.env
+.next/
+*.log
+tsconfig.tsbuildinfo
+zip\ files/
+extracted/
+.DS_Store
+node_modules

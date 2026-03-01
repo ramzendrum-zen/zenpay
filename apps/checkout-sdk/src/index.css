@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+    --color-primary: #2563eb;
+    --font-sans: "Inter", system-ui, sans-serif;
+    --radius-xl: 1rem;
+    --radius-2xl: 1.5rem;
+}
+
+:root {
+    font-family: var(--font-sans);
+}
+
+button,
+[role="button"],
+a {
+    cursor: pointer;
+}
