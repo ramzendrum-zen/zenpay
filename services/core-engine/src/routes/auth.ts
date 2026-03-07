@@ -56,12 +56,10 @@ router.post('/register', async (req, res) => {
                 }
             });
 
-            console.log(`[AUTH] Resending verification email to: ${email}`);
-            try {
-                await sendVerificationEmail(email, name, otpCode);
-            } catch (emailErr) {
-                console.error(`[AUTH] Critical: Re-verification email failed for ${email}:`, emailErr);
-            }
+            console.log(`[AUTH] Resending verification email to: ${email} (Async)`);
+            sendVerificationEmail(email, name, otpCode).catch(err => {
+                console.error(`[AUTH] Async re-verification email failure for ${email}:`, err);
+            });
 
             return res.status(200).json({
                 status: 'success',
@@ -101,14 +99,10 @@ router.post('/register', async (req, res) => {
             }
         });
 
-        console.log(`[AUTH] Sending verification email to: ${email}`);
-        try {
-            await sendVerificationEmail(email, name, otp);
-            console.log(`[AUTH] Verification OTP for ${email}: ${otp}`);
-        } catch (emailErr) {
-            console.error(`[AUTH] Critical: Verification email failed for ${email}:`, emailErr);
-            // We still have the account created, but we should inform the user or ignore and log
-        }
+        console.log(`[AUTH] Sending verification email to: ${email} (Async)`);
+        sendVerificationEmail(email, name, otp).catch(err => {
+            console.error(`[AUTH] Async verification email failure for ${email}:`, err);
+        });
 
         return res.status(201).json({
             status: 'success',
@@ -189,7 +183,9 @@ router.post('/resend-otp', async (req, res) => {
         const expiry = otpExpiry();
 
         await prisma.merchant.update({ where: { email }, data: { otpCode: otp, otpExpiry: expiry } });
-        await sendVerificationEmail(email, merchant.name, otp);
+        sendVerificationEmail(email, merchant.name, otp).catch(err => {
+            console.error(`[AUTH] Async resend OTP email failure for ${email}:`, err);
+        });
         console.log(`[AUTH] Resent Verification OTP for ${email}: ${otp}`);
 
         return res.json({ status: 'success', message: 'New OTP sent to your email' });
@@ -224,7 +220,9 @@ router.post('/login', async (req, res) => {
             const otp = generateOtp();
             const expiry = otpExpiry();
             await prisma.merchant.update({ where: { email }, data: { otpCode: otp, otpExpiry: expiry } });
-            await sendVerificationEmail(email, merchant.name, otp);
+            sendVerificationEmail(email, merchant.name, otp).catch(err => {
+                console.error(`[AUTH] Async login verification email failure for ${email}:`, err);
+            });
             return res.status(403).json({
                 status: 'unverified',
                 error: 'Email not verified. A new OTP has been sent to your email.',
@@ -264,7 +262,9 @@ router.post('/forgot-password', async (req, res) => {
         const otp = generateOtp();
         const expiry = otpExpiry();
         await prisma.merchant.update({ where: { email }, data: { otpCode: otp, otpExpiry: expiry } });
-        await sendPasswordResetEmail(email, merchant.name, otp);
+        sendPasswordResetEmail(email, merchant.name, otp).catch(err => {
+            console.error(`[AUTH] Async password reset email failure for ${email}:`, err);
+        });
         console.log(`[AUTH] Password Reset OTP for ${email}: ${otp}`);
 
         return res.json({ status: 'success', message: 'Password reset OTP sent to your email' });
