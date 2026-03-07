@@ -1,6 +1,5 @@
 {
-    "buildCommand": "npm install && npm run build --workspace=@zenwallet/merchant-dashboard",
+    "buildCommand": "npm run build --workspace=@zenwallet/merchant-dashboard",
     "outputDirectory": "apps/merchant-dashboard/dist",
-    "installCommand": "npm install",
-    "framework": "vite"
+    "framework": null
 }
