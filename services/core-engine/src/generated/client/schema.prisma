@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/client"
@@ -9,6 +6,231 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model Merchant {
+  id              String           @id @default(cuid())
+  name            String
+  publicKey       String           @unique
+  secretKeyHash   String
+  status          MerchantStatus   @default(ACTIVE)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  businessName    String?
+  email           String           @unique
+  emailVerified   Boolean          @default(false)
+  otpCode         String?
+  otpExpiry       DateTime?
+  passwordHash    String
+  secretKey       String?
+  apiKeys         ApiKey[]
+  apiLogs         ApiLog[]
+  idempotencyKeys IdempotencyKey[]
+  orders          Order[]
+  webhooks        Webhook[]
+}
+
+model ApiKey {
+  id            String    @id @default(cuid())
+  merchantId    String
+  publicKey     String    @unique
+  secretKeyHash String
+  environment   String    @default("live")
+  createdAt     DateTime  @default(now())
+  revokedAt     DateTime?
+  lastUsedAt    DateTime?
+  secretKey     String?
+  name          String    @default("Production Key")
+  merchant      Merchant  @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+}
+
+model Webhook {
+  id         String   @id @default(cuid())
+  merchantId String
+  url        String
+  events     String[]
+  secret     String
+  status     String   @default("active")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+}
+
+model ApiLog {
+  id           String   @id @default(cuid())
+  merchantId   String
+  endpoint     String
+  method       String
+  statusCode   Int
+  requestBody  String?
+  responseBody String?
+  createdAt    DateTime @default(now())
+  merchant     Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+}
+
+model User {
+  id                 String          @id @default(cuid())
+  name               String?
+  email              String          @unique
+  upiId              String          @unique
+  status             String          @default("ACTIVE")
+  createdAt          DateTime        @default(now())
+  passwordHash       String          @default("")
+  transactionPinHash String?
+  failedPinAttempts  Int             @default(0)
+  lockedUntil        DateTime?
+  cards              Card[]
+  ledgerEntries      LedgerEntries[]
+  payments           Payment[]
+}
+
+model Card {
+  id          String   @id @default(cuid())
+  userId      String
+  cardNumber  String   @unique
+  expiryMonth Int
+  expiryYear  Int
+  cvvHash     String
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  merchantId     String
+  amountPaise    Int
+  currency       String      @default("INR")
+  receipt        String?
+  status         OrderStatus @default(PENDING)
+  idempotencyKey String?     @unique
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  expiresAt      DateTime?
+  merchant       Merchant    @relation(fields: [merchantId], references: [id])
+  payments       Payment[]
+
+  @@index([merchantId])
+}
+
+model Payment {
+  id              String                   @id @default(cuid())
+  orderId         String
+  userId          String
+  method          String
+  status          PaymentStatus            @default(CREATED)
+  amountPaise     Int
+  riskScore       Float?                   @default(0.0)
+  signature       String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  authorizationId String?
+  capturedAt      DateTime?
+  failedReason    String?
+  refundedPaise   Int                      @default(0)
+  chargebacks     Chargeback[]
+  order           Order                    @relation(fields: [orderId], references: [id])
+  user            User                     @relation(fields: [userId], references: [id])
+  transitions     PaymentStateTransition[]
+  refunds         Refund[]
+
+  @@index([orderId])
+  @@index([userId])
+}
+
+model LedgerEntries {
+  id            String        @id @default(cuid())
+  userId        String
+  type          LedgerType
+  amountPaise   Int
+  referenceType ReferenceType
+  referenceId   String
+  balanceAfter  Int
+  createdAt     DateTime      @default(now())
+  user          User          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([referenceId])
+}
+
+model WebhookDelivery {
+  id          String    @id @default(cuid())
+  merchantId  String
+  eventId     String    @unique
+  event       String
+  payload     String
+  status      String    @default("PENDING")
+  attempts    Int       @default(0)
+  url         String
+  signature   String
+  timestamp   String
+  nextRetryAt DateTime?
+  lastError   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([merchantId])
+  @@index([status])
+}
+
+model IdempotencyKey {
+  id           String   @id @default(cuid())
+  merchantId   String
+  key          String
+  requestHash  String?
+  responseBody String?
+  status       String   @default("PROCESSED")
+  createdAt    DateTime @default(now())
+  merchant     Merchant @relation(fields: [merchantId], references: [id])
+
+  @@unique([merchantId, key])
+  @@index([merchantId, key])
+}
+
+model Refund {
+  id          String    @id @default(cuid())
+  paymentId   String
+  amountPaise Int
+  status      String    @default("PENDING")
+  reason      String?
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+  payment     Payment   @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
+}
+
+model Chargeback {
+  id          String   @id @default(cuid())
+  paymentId   String
+  amountPaise Int
+  reason      String?
+  status      String   @default("OPEN")
+  createdAt   DateTime @default(now())
+  payment     Payment  @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
+}
+
+model PaymentStateTransition {
+  id         String   @id @default(cuid())
+  paymentId  String
+  fromStatus String
+  toStatus   String
+  reason     String?
+  timestamp  DateTime @default(now())
+  actor      String   @default("system")
+  payment    Payment  @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
 }
 
 enum MerchantStatus {
@@ -46,229 +268,4 @@ enum ReferenceType {
   TRANSFER
   WITHDRAWAL
   CHARGEBACK
-}
-
-model Merchant {
-  id              String           @id @default(cuid())
-  name            String
-  email           String           @unique
-  businessName    String?
-  passwordHash    String
-  publicKey       String           @unique
-  secretKeyHash   String
-  secretKey       String? // Legacy or backup access
-  status          MerchantStatus   @default(ACTIVE)
-  emailVerified   Boolean          @default(false)
-  otpCode         String?
-  otpExpiry       DateTime?
-  orders          Order[]
-  apiKeys         ApiKey[]
-  webhooks        Webhook[]
-  apiLogs         ApiLog[]
-  idempotencyKeys IdempotencyKey[]
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-}
-
-model ApiKey {
-  id            String    @id @default(cuid())
-  merchantId    String
-  merchant      Merchant  @relation(fields: [merchantId], references: [id])
-  publicKey     String    @unique
-  name          String    @default("Production Key") // Descriptive label
-  secretKeyHash String
-  secretKey     String? // Encrypted or restricted access
-  environment   String    @default("live") // live or test
-  createdAt     DateTime  @default(now())
-  revokedAt     DateTime?
-  lastUsedAt    DateTime?
-
-  @@index([merchantId])
-}
-
-model Webhook {
-  id         String   @id @default(cuid())
-  merchantId String
-  merchant   Merchant @relation(fields: [merchantId], references: [id])
-  url        String
-  events     String[] // e.g., ["payment.captured", "order.created"]
-  secret     String
-  status     String   @default("active") // active or disabled
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([merchantId])
-}
-
-model ApiLog {
-  id           String   @id @default(cuid())
-  merchantId   String
-  merchant     Merchant @relation(fields: [merchantId], references: [id])
-  endpoint     String
-  method       String
-  statusCode   Int
-  requestBody  String?  @db.Text
-  responseBody String?  @db.Text
-  createdAt    DateTime @default(now())
-
-  @@index([merchantId])
-}
-
-model User {
-  id                 String          @id @default(cuid())
-  name               String?
-  email              String          @unique
-  upiId              String          @unique
-  passwordHash       String          @default("") // For consumer login
-  transactionPinHash String?
-  failedPinAttempts  Int             @default(0)
-  lockedUntil        DateTime?
-  status             String          @default("ACTIVE")
-  cards              Card[]
-  payments           Payment[]
-  ledgerEntries      LedgerEntries[]
-  createdAt          DateTime        @default(now())
-}
-
-model Card {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  cardNumber  String   @unique // Masked on frontend, raw here (or encrypted)
-  expiryMonth Int
-  expiryYear  Int
-  cvvHash     String
-  status      String   @default("ACTIVE") // ACTIVE, BLOCKED
-  createdAt   DateTime @default(now())
-
-  @@index([userId])
-}
-
-model Order {
-  id             String      @id @default(cuid())
-  merchantId     String
-  merchant       Merchant    @relation(fields: [merchantId], references: [id])
-  amountPaise    Int // stored in paise
-  currency       String      @default("INR")
-  receipt        String?
-  status         OrderStatus @default(PENDING)
-  idempotencyKey String?     @unique
-  expiresAt      DateTime?
-  payments       Payment[]
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-
-  @@index([merchantId])
-}
-
-model Payment {
-  id              String                   @id @default(cuid())
-  orderId         String
-  order           Order                    @relation(fields: [orderId], references: [id])
-  userId          String
-  user            User                     @relation(fields: [userId], references: [id])
-  method          String // card, upi, qr
-  status          PaymentStatus            @default(CREATED)
-  amountPaise     Int
-  riskScore       Float?                   @default(0.0)
-  signature       String?
-  authorizationId String?
-  capturedAt      DateTime?
-  failedReason    String?
-  refundedPaise   Int                      @default(0)
-  refunds         Refund[]
-  chargebacks     Chargeback[]
-  transitions     PaymentStateTransition[]
-  createdAt       DateTime                 @default(now())
-  updatedAt       DateTime                 @updatedAt
-
-  @@index([orderId])
-  @@index([userId])
-}
-
-model LedgerEntries {
-  id            String        @id @default(cuid())
-  userId        String
-  user          User          @relation(fields: [userId], references: [id])
-  type          LedgerType
-  amountPaise   Int
-  referenceType ReferenceType
-  referenceId   String
-  balanceAfter  Int
-  createdAt     DateTime      @default(now())
-
-  @@index([userId])
-  @@index([referenceId])
-}
-
-model WebhookDelivery {
-  id          String    @id @default(cuid())
-  merchantId  String
-  eventId     String    @unique
-  event       String
-  payload     String    @db.Text
-  status      String    @default("PENDING") // PENDING, SENT, FAILED
-  attempts    Int       @default(0)
-  url         String
-  signature   String
-  timestamp   String
-  nextRetryAt DateTime?
-  lastError   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([merchantId])
-  @@index([status])
-}
-
-model IdempotencyKey {
-  id           String   @id @default(cuid())
-  merchantId   String
-  merchant     Merchant @relation(fields: [merchantId], references: [id])
-  key          String
-  requestHash  String?
-  responseBody String?  @db.Text
-  status       String   @default("PROCESSED")
-  createdAt    DateTime @default(now())
-
-  @@unique([merchantId, key])
-  @@index([merchantId, key])
-}
-
-model Refund {
-  id          String    @id @default(cuid())
-  paymentId   String
-  payment     Payment   @relation(fields: [paymentId], references: [id])
-  amountPaise Int
-  status      String    @default("PENDING")
-  reason      String?
-  createdAt   DateTime  @default(now())
-  processedAt DateTime?
-
-  @@index([paymentId])
-}
-
-model Chargeback {
-  id          String   @id @default(cuid())
-  paymentId   String
-  payment     Payment  @relation(fields: [paymentId], references: [id])
-  amountPaise Int
-  reason      String?
-  status      String   @default("OPEN")
-  createdAt   DateTime @default(now())
-
-  @@index([paymentId])
-}
-
-model PaymentStateTransition {
-  id         String   @id @default(cuid())
-  paymentId  String
-  payment    Payment  @relation(fields: [paymentId], references: [id])
-  fromStatus String
-  toStatus   String
-  actor      String   @default("system")
-  reason     String?
-  timestamp  DateTime @default(now())
-
-  @@index([paymentId])
 }
