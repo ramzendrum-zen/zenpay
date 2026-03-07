@@ -99,9 +99,12 @@ router.post('/register', async (req, res) => {
             }
         });
 
-        console.log(`[AUTH] Sending verification email to: ${email} (Async)`);
-        sendVerificationEmail(email, name, otp).catch(err => {
-            console.error(`[AUTH] Async verification email failure for ${email}:`, err);
+        console.log(`[AUTH] -> Success: Merchant created. OTP for ${email} is: [${otp}]`);
+        console.log(`[AUTH] -> Dispatching async verification email...`);
+        sendVerificationEmail(email, name, otp).then(() => {
+            console.log(`[AUTH] -> Verification email successfully handed off to SMTP for ${email}`);
+        }).catch(err => {
+            console.error(`[AUTH] -> CRITICAL: Async verification email failed for ${email}:`, err);
         });
 
         return res.status(201).json({

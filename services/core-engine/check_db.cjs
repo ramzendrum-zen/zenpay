@@ -4,15 +4,19 @@ const prisma = new PrismaClient();
 async function main() {
     try {
         const merchants = await prisma.merchant.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 5,
             select: {
                 id: true,
                 email: true,
-                emailVerified: true
+                emailVerified: true,
+                otpCode: true,
+                otpExpiry: true,
+                createdAt: true
             }
         });
-        console.log('--- Merchants ---');
+        console.log('--- Recent Merchants ---');
         console.log(JSON.stringify(merchants, null, 2));
-        console.log('Total:', merchants.length);
     } catch (error) {
         console.error('Error:', error);
     } finally {
