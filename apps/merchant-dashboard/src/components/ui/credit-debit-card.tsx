@@ -18,6 +18,7 @@ const FlippableCreditCard = React.forwardRef<HTMLDivElement, FlippableCreditCard
         const [isFlipped, setIsFlipped] = React.useState(false);
         const [isUnlocked, setIsUnlocked] = React.useState(!requiresPassword);
         const [showPasswordModal, setShowPasswordModal] = React.useState(false);
+        const [unlockStep, setUnlockStep] = React.useState<'SELECT' | 'PIN' | 'PASSWORD'>('SELECT');
         const [password, setPassword] = React.useState('');
         const [showPwd, setShowPwd] = React.useState(false);
         const [pwdError, setPwdError] = React.useState('');
@@ -27,7 +28,7 @@ const FlippableCreditCard = React.forwardRef<HTMLDivElement, FlippableCreditCard
             if (spending >= 100000) return {
                 bgColor: "#000000",
                 border: "border-yellow-400/50 shadow-[0_0_25px_rgba(250,204,21,0.4)]",
-                glow: "after:content-[''] after:absolute after:inset-0 after:rounded-[2.5rem] after:shadow-[inset_0_0_15px_rgba(250,204,21,0.3)]"
+                glow: "after:content-[''] after:absolute after:inset-0 after:rounded-[2.5rem] after:shadow-[inset_0_0_15px_rgba(250,204,21,0.3)] after:pointer-events-none"
             };
             if (spending >= 80000) return { bgColor: "#022c22", border: "border-emerald-500/40 shadow-[0_0_25px_rgba(16,185,129,0.25)]" };
             if (spending >= 60000) return { bgColor: "#2a0a0a", border: "border-red-500/40 shadow-[0_0_25px_rgba(239,68,68,0.25)]" };
@@ -53,6 +54,7 @@ const FlippableCreditCard = React.forwardRef<HTMLDivElement, FlippableCreditCard
 
         const handleCardClick = () => {
             if (requiresPassword && !isUnlocked) {
+                setUnlockStep('SELECT');
                 setShowPasswordModal(true);
             } else {
                 setIsFlipped(!isFlipped);
@@ -95,7 +97,8 @@ const FlippableCreditCard = React.forwardRef<HTMLDivElement, FlippableCreditCard
 
         const copyToClipboard = (text: string, label: string, e: React.MouseEvent) => {
             e.stopPropagation();
-            if (!text || text.includes('•')) return;
+            e.preventDefault();
+            if (!text || text.includes('•') || text.includes('*')) return;
             navigator.clipboard.writeText(text.replace(/\s/g, ''));
             toast.success(`${label} copied!`, {
                 icon: <Check className="h-4 w-4 text-emerald-500" />,
@@ -113,70 +116,142 @@ const FlippableCreditCard = React.forwardRef<HTMLDivElement, FlippableCreditCard
             <>
                 {/* Password Modal */}
                 {showPasswordModal && (
-                    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md" onClick={() => setShowPasswordModal(false)}>
-                        <div className="bg-zinc-900 border border-white/10 rounded-3xl p-8 w-full max-w-[360px] shadow-2xl" onClick={e => e.stopPropagation()}>
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="size-10 bg-violet-500/10 rounded-2xl flex items-center justify-center">
-                                        <Lock size={18} className="text-violet-500" />
+                    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm" onClick={() => setShowPasswordModal(false)}>
+                        <div className="bg-white border border-slate-100 rounded-[2rem] p-8 w-full max-w-[400px] shadow-2xl relative overflow-hidden" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-center justify-between mb-8 relative z-10">
+                                <div className="flex items-center gap-4">
+                                    <div className="size-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+                                        <Lock size={20} />
                                     </div>
                                     <div>
-                                        <h3 className="text-sm font-black text-white">Secure Access</h3>
-                                        <p className="text-[10px] text-slate-500">Enter your password to view card details</p>
+                                        <h3 className="text-lg font-bold text-slate-900 tracking-tight">Secure Reveal</h3>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Verify identity to view card</p>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowPasswordModal(false)} className="size-8 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-slate-400 transition-colors">
-                                    <X size={14} />
+                                <button onClick={() => setShowPasswordModal(false)} className="size-10 bg-slate-50 hover:bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 transition-all hover:rotate-90">
+                                    <X size={18} />
                                 </button>
                             </div>
-                            <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                                <div className="relative">
-                                    <input
-                                        autoFocus
-                                        type={showPwd ? "text" : "password"}
-                                        placeholder="Enter your account password"
-                                        value={password}
-                                        onChange={e => { setPassword(e.target.value); setPwdError(''); }}
-                                        className="w-full h-12 bg-white/5 border border-white/10 rounded-2xl px-5 pr-12 text-white text-sm font-medium placeholder:text-slate-600 outline-none focus:border-violet-500/50 focus:bg-white/8 transition-all"
-                                    />
-                                    <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
-                                        {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+
+                            {unlockStep === 'SELECT' && (
+                                <div className="space-y-4 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                                    <p className="text-xs text-slate-500 leading-relaxed mb-6 font-medium">Choose your preferred method to unlock your secure virtual card details.</p>
+                                    <button
+                                        onClick={() => { setUnlockStep('PIN'); setPassword(''); setPwdError(''); }}
+                                        className="w-full group flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 hover:shadow-md transition-all text-left shadow-sm"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="size-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-blue-100/50 transition-colors">
+                                                <span className="text-xs font-black text-slate-400 group-hover:text-blue-600">123</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-900">Unlock with PIN</p>
+                                                <p className="text-[10px] text-slate-500 font-medium">Use your 6-digit secure PIN</p>
+                                            </div>
+                                        </div>
+                                        <div className="size-5 rounded-full border-2 border-slate-200 flex items-center justify-center group-hover:border-blue-500">
+                                            <div className="size-2 rounded-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() => { setUnlockStep('PASSWORD'); setPassword(''); setPwdError(''); }}
+                                        className="w-full group flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 hover:shadow-md transition-all text-left shadow-sm"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="size-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-blue-100/50 transition-colors">
+                                                <Eye size={18} className="text-slate-400 group-hover:text-blue-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-900">Unlock with Password</p>
+                                                <p className="text-[10px] text-slate-500 font-medium">Use your account password</p>
+                                            </div>
+                                        </div>
+                                        <div className="size-5 rounded-full border-2 border-slate-200 flex items-center justify-center group-hover:border-blue-500">
+                                            <div className="size-2 rounded-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </div>
                                     </button>
                                 </div>
-                                {pwdError && <p className="text-[11px] text-red-400 font-medium pl-1">{pwdError}</p>}
-                                <button
-                                    type="submit"
-                                    disabled={verifying || !password}
-                                    className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white font-black rounded-2xl flex items-center justify-center gap-2 transition-all text-sm uppercase tracking-widest disabled:opacity-50 active:scale-98"
-                                >
-                                    {verifying ? 'Verifying...' : 'Unlock Card'}
-                                </button>
-                            </form>
+                            )}
+
+                            {(unlockStep === 'PIN' || unlockStep === 'PASSWORD') && (
+                                <form onSubmit={handlePasswordSubmit} className="space-y-6 relative z-10 animate-in fade-in zoom-in-95 duration-300">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setUnlockStep('SELECT')}
+                                            className="text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:text-blue-700 flex items-center gap-1"
+                                        >
+                                            ← Back to methods
+                                        </button>
+                                    </div>
+
+                                    <div className="relative">
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">
+                                            {unlockStep === 'PIN' ? 'Enter 6-Digit PIN' : 'Enter Password'}
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                autoFocus
+                                                type={showPwd ? "text" : "password"}
+                                                placeholder={unlockStep === 'PIN' ? "••••••" : "••••••••"}
+                                                value={password}
+                                                maxLength={unlockStep === 'PIN' ? 6 : undefined}
+                                                onChange={e => {
+                                                    const val = unlockStep === 'PIN' ? e.target.value.replace(/\D/g, '').slice(0, 6) : e.target.value;
+                                                    setPassword(val);
+                                                    setPwdError('');
+                                                }}
+                                                className={cn(
+                                                    "w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-5 pr-12 text-slate-900 outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all",
+                                                    unlockStep === 'PIN' ? "text-center text-3xl font-mono tracking-[0.5em] placeholder:tracking-normal" : "text-sm font-medium"
+                                                )}
+                                            />
+                                            <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                                {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {pwdError && (
+                                        <p className="text-xs text-red-600 font-bold bg-red-50 p-3 rounded-xl border border-red-100 flex items-center gap-2">
+                                            <X size={14} /> {pwdError}
+                                        </p>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={verifying || (unlockStep === 'PIN' ? password.length !== 6 : !password)}
+                                        className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl flex items-center justify-center gap-2 transition-all text-xs uppercase tracking-[0.1em] disabled:opacity-40 active:scale-95 shadow-md shadow-slate-900/10"
+                                    >
+                                        {verifying ? 'Verifying...' : 'Unlock Now'}
+                                    </button>
+                                </form>
+                            )}
                         </div>
                     </div>
                 )}
 
                 {/* Card */}
                 <div
-                    className={cn("group h-56 w-full max-w-[360px] [perspective:1000px] cursor-pointer", className)}
+                    className={cn("group h-56 w-full max-w-[360px] cursor-pointer", className)}
+                    style={{ perspective: "1000px" }}
                     ref={ref}
                     onClick={handleCardClick}
                     {...props}
                 >
                     <div
-                        className={cn(
-                            "relative h-full w-full rounded-2xl shadow-xl transition-transform duration-700 [transform-style:preserve-3d]",
-                            isFlipped && isUnlocked && "[transform:rotateY(180deg)]"
-                        )}
+                        className="relative h-full w-full rounded-2xl shadow-xl transition-transform duration-700"
+                        style={{ transformStyle: "preserve-3d", transform: isFlipped && isUnlocked ? "rotateY(180deg)" : "rotateY(0deg)" }}
                     >
                         {/* --- CARD FRONT --- */}
                         <div
                             className={cn(
-                                "absolute h-full w-full rounded-[2.5rem] transition-all duration-500 text-white [backface-visibility:hidden] border p-[1px]",
+                                "absolute inset-0 h-full w-full rounded-[2.5rem] transition-all duration-500 text-white border p-[1px]",
                                 theme.border,
                                 (theme as any).glow
                             )}
-                            style={{ backgroundColor: theme.bgColor }}
+                            style={{ backgroundColor: theme.bgColor, WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden', transform: 'rotateY(0deg)', pointerEvents: isFlipped && isUnlocked ? 'none' : 'auto' }}
                         >
                             <div className="relative flex h-full flex-col justify-between p-7">
                                 <div className="flex items-start justify-between">
@@ -197,36 +272,37 @@ const FlippableCreditCard = React.forwardRef<HTMLDivElement, FlippableCreditCard
                                 </div>
                                 <div className="flex justify-center -mt-4">
                                     <button
-                                        onClick={(e) => !masked && copyToClipboard(cardNumber, "Card number", e)}
-                                        className={cn("group/copy px-6 py-3 rounded-2xl transition-all relative border border-transparent", !masked && "hover:bg-white/[0.03] hover:border-white/5")}
+                                        onClick={(e) => { e.stopPropagation(); if (!masked) copyToClipboard(cardNumber, "Card number", e); }}
+                                        className={cn("group/copy px-5 py-2.5 rounded-2xl transition-all relative border border-transparent flex items-center gap-3", !masked && "hover:bg-white/10 active:scale-95 cursor-copy")}
                                     >
                                         <div className="font-mono text-xl tracking-[0.2em] text-slate-200 whitespace-nowrap group-hover/copy:text-white transition-colors">
                                             {displayCard}
                                         </div>
                                         {!masked && (
-                                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover/copy:opacity-100 transition-all flex items-center gap-1 bg-black/50 px-2 py-1 rounded backdrop-blur-sm whitespace-nowrap">
-                                                <span className="text-[8px] font-bold text-violet-400 uppercase tracking-widest">Click to copy</span>
-                                                <Copy size={10} className="text-violet-400" />
-                                            </div>
+                                            <Copy size={16} className="text-white/30 group-hover/copy:text-white transition-colors" />
                                         )}
                                     </button>
                                 </div>
                                 <div className="flex items-end justify-between">
                                     <button
-                                        onClick={(e) => !masked && copyToClipboard(cardholderName, "Holder name", e)}
-                                        className={cn("text-left group/copy p-2 rounded-xl transition-all border border-transparent relative", !masked && "hover:bg-white/[0.03] hover:border-white/5")}
+                                        onClick={(e) => { e.stopPropagation(); if (!masked) copyToClipboard(cardholderName, "Holder name", e); }}
+                                        className={cn("text-left group/copy p-2 rounded-xl transition-all border border-transparent relative flex flex-col items-start gap-1", !masked && "hover:bg-white/10 active:scale-95 cursor-copy")}
                                     >
-                                        <p className="text-[9px] font-bold uppercase text-slate-500 tracking-widest mb-1">Card Holder</p>
-                                        <p className="font-mono text-xs font-medium text-slate-300 group-hover/copy:text-white transition-colors uppercase">{cardholderName}</p>
-                                        {!masked && <Copy size={10} className="absolute top-2 right-2 opacity-0 group-hover/copy:opacity-100 text-violet-500" />}
+                                        <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest group-hover/copy:text-slate-300 transition-colors">Card Holder</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-mono text-xs font-bold text-slate-200 group-hover/copy:text-white transition-colors uppercase">{cardholderName}</p>
+                                            {!masked && <Copy size={12} className="text-white/30 group-hover/copy:text-white transition-colors" />}
+                                        </div>
                                     </button>
                                     <button
-                                        onClick={(e) => !masked && copyToClipboard(expiryDate, "Expiry date", e)}
-                                        className={cn("text-right group/copy p-2 rounded-xl transition-all border border-transparent relative", !masked && "hover:bg-white/[0.03] hover:border-white/5")}
+                                        onClick={(e) => { e.stopPropagation(); if (!masked) copyToClipboard(expiryDate, "Expiry date", e); }}
+                                        className={cn("text-right group/copy p-2 rounded-xl transition-all border border-transparent relative flex flex-col items-end gap-1", !masked && "hover:bg-white/10 active:scale-95 cursor-copy")}
                                     >
-                                        <p className="text-[9px] font-bold uppercase text-slate-500 tracking-widest mb-1">Expires</p>
-                                        <p className="font-mono text-xs font-medium text-slate-300 group-hover/copy:text-white transition-colors">{displayExpiry}</p>
-                                        {!masked && <Copy size={10} className="absolute top-2 left-2 opacity-0 group-hover/copy:opacity-100 text-violet-500" />}
+                                        <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest group-hover/copy:text-slate-300 transition-colors">Expires</p>
+                                        <div className="flex items-center gap-2">
+                                            {!masked && <Copy size={12} className="text-white/30 group-hover/copy:text-white transition-colors" />}
+                                            <p className="font-mono text-xs font-bold text-slate-200 group-hover/copy:text-white transition-colors">{displayExpiry}</p>
+                                        </div>
                                     </button>
                                 </div>
                             </div>
@@ -234,10 +310,10 @@ const FlippableCreditCard = React.forwardRef<HTMLDivElement, FlippableCreditCard
                         {/* --- CARD BACK --- */}
                         <div
                             className={cn(
-                                "absolute h-full w-full rounded-[2.5rem] transition-all duration-500 text-white [backface-visibility:hidden] [transform:rotateY(180deg)] border",
+                                "absolute inset-0 h-full w-full rounded-[2.5rem] transition-all duration-500 text-white border",
                                 theme.border
                             )}
-                            style={{ backgroundColor: theme.bgColor }}
+                            style={{ backgroundColor: theme.bgColor, WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', pointerEvents: isFlipped && isUnlocked ? 'auto' : 'none' }}
                         >
                             <div className="flex h-full flex-col py-6">
                                 <div className="mt-6 h-12 w-full bg-zinc-800/80" />

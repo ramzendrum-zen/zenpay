@@ -1,26 +1,22 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import {
-    LayoutDashboard,
-    Receipt,
-    Undo2,
-    Users,
-    Terminal,
-    Settings,
-    HelpCircle,
-    Search,
-    Bell,
-    Wallet,
-    ArrowUpRight,
-    Zap,
-    LogOut,
-    Fingerprint
-} from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
 }
+
+const NAV_ITEMS = [
+    { name: 'Dashboard', icon: 'dashboard', path: '/' },
+    { name: 'Transactions', icon: 'receipt_long', path: '/transactions' },
+    { name: 'Settlements', icon: 'account_balance_wallet', path: '/settlements' },
+    { name: 'Refunds', icon: 'undo', path: '/refunds' },
+    { name: 'Personal Wallet', icon: 'wallet', path: '/personal' },
+    { name: 'API Integration', icon: 'integration_instructions', path: '/api-integration' },
+    { name: 'Simulator', icon: 'terminal', path: '/simulator' },
+    { name: 'Settings', icon: 'settings', path: '/settings' },
+];
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     const location = useLocation();
@@ -32,148 +28,90 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
         navigate('/auth');
     };
 
-    const navItems = [
-        { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
-        { name: 'Transactions', icon: Receipt, path: '/transactions' },
-        { name: 'Settlements', icon: ArrowUpRight, path: '/settlements' },
-        { name: 'Refunds', icon: Undo2, path: '/refunds' },
-        { name: 'Subscribers', icon: Users, path: '/subscribers' },
-    ];
-
-    const personalItems = [
-        { name: 'Personal Wallet', icon: Wallet, path: '/personal' },
-        { name: 'My Identity', icon: Fingerprint, path: '/profile' }
-    ];
-
-    const systemItems = [
-        { name: 'API Integration', icon: Terminal, path: '/api-integration' },
-        { name: 'Simulator', icon: Zap, path: '/simulator' },
-        { name: 'Settings', icon: Settings, path: '/settings' },
-        { name: 'Documentation', icon: HelpCircle, path: '/docs' },
-    ];
-
-    const isActive = (path: string) => location.pathname === path;
+    const isActive = (path: string) =>
+        path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
     return (
-        <div className="flex h-screen bg-slate-50 font-sans">
-            {/* Sidebar */}
-            <aside className="w-[240px] flex-shrink-0 bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 z-50">
-                <div className="h-16 px-6 flex items-center gap-2.5 border-b border-slate-100">
-                    <div className="size-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm">
-                        <Wallet size={18} strokeWidth={2.5} />
-                    </div>
-                    <span className="font-semibold text-slate-900 text-lg tracking-tight">ZenWallet</span>
-                </div>
-
-                <div className="flex-1 overflow-y-auto py-6">
-                    <div className="px-3 space-y-1">
-                        {navItems.map((item) => (
-                            <Link
-                                key={item.path}
-                                to={item.path}
-                                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(item.path)
-                                    ? 'bg-blue-50 text-blue-700'
-                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                    }`}
-                            >
-                                <item.icon size={18} className={isActive(item.path) ? 'text-blue-700' : 'text-slate-400'} />
-                                {item.name}
-                            </Link>
-                        ))}
-                    </div>
-
-                    <div className="mt-8 px-6">
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">My Finances</h3>
-                    </div>
-
-                    <div className="px-3 space-y-1">
-                        {personalItems.map((item) => (
-                            <Link
-                                key={item.path}
-                                to={item.path}
-                                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(item.path)
-                                    ? 'bg-blue-50 text-blue-700'
-                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                    }`}
-                            >
-                                <item.icon size={18} className={isActive(item.path) ? 'text-blue-700' : 'text-slate-400'} />
-                                {item.name}
-                            </Link>
-                        ))}
-                    </div>
-
-                    <div className="mt-8 px-6">
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Systems</h3>
-                    </div>
-
-                    <div className="px-3 space-y-1">
-                        {systemItems.map((item) => (
-                            <Link
-                                key={item.path}
-                                to={item.path}
-                                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(item.path)
-                                    ? 'bg-blue-50 text-blue-700'
-                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                    }`}
-                            >
-                                <item.icon size={18} className={isActive(item.path) ? 'text-blue-700' : 'text-slate-400'} />
-                                {item.name}
-                            </Link>
-                        ))}
+        <div className="flex min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans">
+            {/* ── Slim Minimal Sidebar ── */}
+            <aside className="w-[72px] bg-white border-r border-slate-200/60 flex flex-col shrink-0 fixed inset-y-0 z-50">
+                <div className="flex items-center justify-center h-16">
+                    <div className="size-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/10">
+                        <span className="material-symbols-outlined text-white text-lg font-bold">payments</span>
                     </div>
                 </div>
 
-                <div className="p-4 border-t border-slate-100">
-                    <div className="flex items-center gap-3 p-2 rounded-lg">
-                        <div className="size-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
-                            {merchant?.name?.charAt(0)?.toUpperCase() || 'M'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-slate-900 truncate">{merchant?.name || 'Merchant'}</p>
-                            <p className="text-[10px] text-slate-500 truncate">{merchant?.email || ''}</p>
-                        </div>
-                        <button onClick={handleLogout} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Log out">
-                            <LogOut size={15} />
-                        </button>
-                    </div>
+                <nav className="flex-1 flex flex-col items-center py-4 gap-2 overflow-y-auto no-scrollbar">
+                    {NAV_ITEMS.map(item => (
+                        <Link
+                            key={item.path}
+                            to={item.path}
+                            className="relative group flex items-center justify-center p-2.5 rounded-xl transition-all duration-300"
+                            title={item.name}
+                        >
+                            {isActive(item.path) && (
+                                <motion.div
+                                    layoutId="nav-pill"
+                                    className="absolute inset-0 bg-blue-50/80 rounded-xl"
+                                    transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
+                                />
+                            )}
+                            <span className={`material-symbols-outlined text-[20px] relative z-10 transition-colors duration-200 ${isActive(item.path) ? 'text-blue-600' : 'text-slate-300 group-hover:text-slate-500'}`}>
+                                {item.icon}
+                            </span>
+                        </Link>
+                    ))}
+                </nav>
+
+                <div className="flex flex-col items-center py-4 gap-4 border-t border-slate-50">
+                    <button onClick={handleLogout} className="text-slate-300 hover:text-red-500 transition-colors" title="Logout">
+                        <span className="material-symbols-outlined text-[20px]">logout</span>
+                    </button>
                 </div>
             </aside>
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col ml-[240px]">
-                {/* Header */}
-                <header className="h-16 bg-white border-b border-slate-200 sticky top-0 z-40 flex items-center justify-between px-8">
-                    <div className="flex-1 max-w-xl">
+            {/* ── Main Content Area ── */}
+            <main className="flex-1 flex flex-col min-h-screen ml-[72px]">
+                {/* ── Fixed Header Component (Non-overlapping) ── */}
+                <header className="sticky top-0 z-40 bg-[#F8FAFC]/80 backdrop-blur-md px-10 h-16 flex items-center justify-between">
+                    {/* Placeholder for page title alignment - titles are rendered inside children */}
+                    <div className="flex-1" />
+
+                    {/* Utilities Bar */}
+                    <div className="flex items-center gap-4">
                         <div className="relative group">
-                            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                            <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
                             <input
+                                className="w-36 pl-8 pr-3 py-1.5 bg-white border border-slate-200/60 rounded-lg text-[10px] focus:outline-none focus:ring-2 focus:ring-blue-500/5 focus:border-blue-500/20 placeholder:text-slate-400 transition-all font-bold uppercase tracking-wider"
+                                placeholder="Search..."
                                 type="text"
-                                placeholder="Search transactions, customers, or help..."
-                                className="w-full h-10 bg-slate-100/50 border-transparent focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-blue-500/5 rounded-lg pl-10 pr-4 text-sm outline-none transition-all placeholder:text-slate-400"
                             />
                         </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <button className="p-2 text-slate-500 hover:bg-slate-50 rounded-lg transition-colors relative">
-                            <Bell size={20} />
-                            <span className="absolute top-2 right-2 size-2 bg-blue-600 rounded-full border-2 border-white"></span>
+                        <button className="p-1.5 text-slate-400 hover:text-slate-900 bg-white border border-slate-200/60 rounded-lg shadow-sm">
+                            <span className="material-symbols-outlined text-lg">notifications</span>
                         </button>
-                        <div className="h-6 w-px bg-slate-200 mx-2"></div>
-                        <button className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all shadow-sm shadow-blue-500/20 active:scale-95">
-                            <Wallet size={16} />
-                            <span>Connect</span>
-                        </button>
+                        <div className="size-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-[10px] shadow-sm">
+                            {merchant?.name?.charAt(0)?.toUpperCase()}
+                        </div>
                     </div>
                 </header>
 
-                {/* Page Content */}
-                <main className="flex-1 overflow-x-hidden">
-                    <div className="max-w-7xl mx-auto px-8 py-8">
+                {/* Page View */}
+                <div className="flex-1 px-10 pb-10">
+                    <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full relative"
+                    >
+                        {/* 
+                           Note: Page headers like "API & Infrastructure" are inside the children.
+                           Due to the flex-col and 16h header above, they will naturally start 
+                           where they are intended without overlapping the search bar.
+                        */}
                         {children}
-                    </div>
-                </main>
-            </div>
+                    </motion.div>
+                </div>
+            </main>
         </div>
     );
 };

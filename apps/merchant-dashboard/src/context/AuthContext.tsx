@@ -6,6 +6,7 @@ interface Merchant {
     email: string;
     businessName?: string;
     publicKey: string;
+    role?: string;
 }
 
 interface AuthContextType {

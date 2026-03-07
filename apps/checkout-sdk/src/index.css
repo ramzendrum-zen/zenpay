@@ -7,8 +7,14 @@
     --radius-2xl: 1.5rem;
 }
 
-:root {
-    font-family: var(--font-sans);
+html,
+body,
+#root {
+    background: transparent !important;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 button,

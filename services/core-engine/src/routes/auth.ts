@@ -32,7 +32,36 @@ router.post('/register', async (req, res) => {
 
         const existing = await prisma.merchant.findUnique({ where: { email } });
         if (existing) {
-            return res.status(409).json({ status: 'error', error: 'An account with this email already exists' });
+            if (existing.emailVerified) {
+                return res.status(409).json({ status: 'error', error: 'An account with this email already exists and is already verified.' });
+            }
+            // Resume/Re-register flow for unverified merchant
+            const passwordHash = await bcrypt.hash(password, 12);
+            const { publicKey, secretKey } = generateMerchantKeys();
+            const secretKeyHash = await bcrypt.hash(secretKey + SALT, 10);
+            const otpCode = generateOtp();
+            const otpExpiryAt = otpExpiry();
+
+            await prisma.merchant.update({
+                where: { id: existing.id },
+                data: {
+                    name,
+                    businessName: businessName || '',
+                    passwordHash,
+                    publicKey,
+                    secretKeyHash,
+                    secretKey,
+                    otpCode,
+                    otpExpiry: otpExpiryAt
+                }
+            });
+
+            await sendVerificationEmail(email, name, otpCode);
+            return res.status(200).json({
+                status: 'success',
+                message: 'Existing unverified account updated. A new verification OTP has been sent to your email.',
+                data: { merchantId: existing.id, email: existing.email }
+            });
         }
 
         const passwordHash = await bcrypt.hash(password, 12);

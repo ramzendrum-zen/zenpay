@@ -1,15 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import {
-    Search,
-    Filter,
-    Download,
-    MoreHorizontal,
-    Loader2,
-    ArrowDownLeft,
-    Inbox
-} from 'lucide-react';
+import { Loader2, Download, Plus, Search, Filter, Calendar, CheckCircle2, Clock, RotateCcw, XCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export const Transactions: React.FC = () => {
     const { token } = useAuth();
@@ -25,137 +18,140 @@ export const Transactions: React.FC = () => {
                 if (data.status === 'success') {
                     setTransactions(data.data);
                 }
-            } catch (err) {
-                console.error('Failed to fetch transactions:', err);
-            } finally {
-                setLoading(false);
-            }
+            } catch (err) { } finally { setLoading(false); }
         };
         if (token) fetchTxns();
     }, [token]);
 
     const formatPaise = (paise: number) => {
-        return (paise / 100).toLocaleString('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            minimumFractionDigits: paise % 100 === 0 ? 0 : 2
+        return (paise / 100).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
         });
     };
 
+    const getStatusStyle = (status: string) => {
+        switch (status) {
+            case 'PAID': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+            case 'PENDING': return 'bg-amber-50 text-amber-600 border-amber-100';
+            case 'REFUNDED': return 'bg-blue-50 text-blue-600 border-blue-100';
+            default: return 'bg-red-50 text-red-600 border-red-100';
+        }
+    };
+
     return (
-        <div className="space-y-8 max-w-7xl mx-auto pb-20">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Payment Explorer</h1>
-                    <p className="text-sm font-semibold text-slate-500 mt-1 uppercase tracking-widest">History of all inbound commerce activities.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-[0.15em] rounded-xl shadow-sm transition-all active:scale-95 group">
-                        <Download size={14} className="group-hover:-translate-y-0.5 transition-transform" />
-                        Export Ledger
-                    </button>
-                    <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-[0.15em] rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-95">
-                        New Payment Link
-                    </button>
+        <div className="w-full space-y-8 pb-20">
+            {/* Top Left Header */}
+            <div className="flex flex-col gap-0.5">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-lg font-bold text-slate-900 tracking-tight">Payment Ledger</h1>
+                        <p className="text-[11px] text-slate-400 font-medium">Capture and reconcile real-time transactions.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200/60 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all">
+                            <Download size={14} />
+                            Export
+                        </button>
+                        <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold shadow-sm hover:bg-blue-700 transition-all">
+                            <Plus size={14} />
+                            New Node
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden min-h-[500px] flex flex-col relative">
-                {loading && (
-                    <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] flex items-center justify-center z-10">
-                        <Loader2 size={32} className="text-blue-600 animate-spin" />
-                    </div>
-                )}
-
-                <div className="px-8 py-6 border-b border-slate-100 flex items-center gap-6 bg-slate-50/50">
-                    <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            {/* List & Filtering */}
+            <div className="bg-white border border-slate-200/60 rounded-[2rem] shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+                {/* Search & Utility Bar */}
+                <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-4">
+                    <div className="relative flex-1 max-w-xs">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" />
                         <input
                             type="text"
-                            placeholder="Find by ID, email or name..."
-                            className="w-full h-11 pl-11 pr-4 bg-white border border-slate-200 rounded-xl text-sm font-bold placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                            placeholder="Filter by ID or Email..."
+                            className="w-full h-10 pl-9 pr-4 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-medium outline-none focus:border-blue-500/20 transition-all"
                         />
                     </div>
-                    <button className="flex items-center gap-2 px-4 py-2 text-slate-600 text-[10px] font-bold uppercase tracking-widest hover:bg-white rounded-xl transition-all border border-slate-200 bg-white shadow-sm">
-                        <Filter size={14} />
-                        Advanced Filter
-                    </button>
+                    <div className="flex gap-2">
+                        <button className="flex items-center gap-1.5 px-3 py-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest bg-white border border-slate-100 rounded-xl hover:text-slate-900">
+                            <Filter size={12} />
+                            Sort
+                        </button>
+                        <button className="flex items-center gap-1.5 px-3 py-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest bg-white border border-slate-100 rounded-xl hover:text-slate-900">
+                            <Calendar size={12} />
+                            History
+                        </button>
+                    </div>
                 </div>
 
-                <div className="flex-1 overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-slate-50/50">
-                                <th className="px-10 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100">Transaction ID</th>
-                                <th className="px-6 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100">Contact / Customer</th>
-                                <th className="px-6 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100 text-right">Settled Amount</th>
-                                <th className="px-6 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100 text-center">Status</th>
-                                <th className="px-6 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100">Activity Date</th>
-                                <th className="px-6 py-5 border-b border-slate-100"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 px-4">
-                            {transactions.length > 0 ? transactions.map((txn) => (
-                                <tr key={txn.id} className="hover:bg-blue-50/30 transition-all group cursor-pointer">
-                                    <td className="px-10 py-6 whitespace-nowrap">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`size-8 rounded-lg flex items-center justify-center ${txn.status === 'PAID' ? 'bg-green-50 text-green-600' : 'bg-slate-50 text-slate-400'}`}>
-                                                {txn.status === 'PAID' ? <ArrowDownLeft size={16} /> : <Inbox size={16} />}
-                                            </div>
-                                            <span className="font-mono text-xs font-bold text-slate-500 tracking-tight group-hover:text-blue-600 transition-colors">#{txn.id.slice(-10).toUpperCase()}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-6 whitespace-nowrap">
-                                        <div>
-                                            <p className="text-sm font-black text-slate-900 leading-none">{txn.customer}</p>
-                                            <p className="text-[10px] font-bold text-slate-400 mt-1.5 uppercase tracking-wide">{txn.email}</p>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-6 whitespace-nowrap text-sm font-black text-slate-900 text-right font-mono">{formatPaise(txn.amount)}</td>
-                                    <td className="px-6 py-6 whitespace-nowrap text-center">
-                                        <span className={`inline-flex items-center px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] border ${txn.status === 'PAID' ? 'bg-green-50 text-green-700 border-green-100' :
-                                            txn.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                                                txn.status === 'REFUNDED' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                                                    'bg-red-50 text-red-700 border-red-100'
-                                            }`}>
-                                            {txn.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-6 whitespace-nowrap">
-                                        <p className="text-[11px] font-bold text-slate-900 uppercase">{new Date(txn.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                                        <p className="text-[10px] font-bold text-slate-400 mt-0.5">{new Date(txn.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                                    </td>
-                                    <td className="px-6 py-6 text-right">
-                                        <button className="p-2 hover:bg-white border hover:border-slate-200 rounded-xl transition-all text-slate-300 hover:text-slate-900 shadow-sm">
-                                            <MoreHorizontal size={18} />
-                                        </button>
-                                    </td>
+                <div className="flex-1">
+                    {loading ? (
+                        <div className="h-64 flex flex-col items-center justify-center gap-4">
+                            <Loader2 className="animate-spin text-blue-600" size={24} />
+                            <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Hydrating Ledger...</p>
+                        </div>
+                    ) : (
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="bg-slate-50/10">
+                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Authority</th>
+                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Correlation ID</th>
+                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Metadata</th>
+                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">Volume</th>
+                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">Timestamp</th>
                                 </tr>
-                            )) : !loading && (
-                                <tr>
-                                    <td colSpan={6} className="py-24 text-center">
-                                        <div className="flex flex-col items-center gap-4">
-                                            <div className="size-20 bg-slate-50 rounded-[2.5rem] border border-slate-100 flex items-center justify-center text-slate-300">
-                                                <Inbox size={40} strokeWidth={1.5} />
+                            </thead>
+                            <tbody className="divide-y divide-slate-100/60 font-medium">
+                                {transactions.map((txn, idx) => (
+                                    <motion.tr key={txn.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }} className="group hover:bg-slate-50/40 transition-all cursor-pointer">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className={`p-1 rounded border ${getStatusStyle(txn.status)}`}>
+                                                    {txn.status === 'PAID' ? <CheckCircle2 size={12} /> : txn.status === 'PENDING' ? <Clock size={12} /> : txn.status === 'REFUNDED' ? <RotateCcw size={12} /> : <XCircle size={12} />}
+                                                </div>
+                                                <span className={`text-[10px] font-bold uppercase tracking-tight ${txn.status === 'PAID' ? 'text-emerald-700' : 'text-slate-500'}`}>{txn.status === 'PAID' ? 'Succeeded' : txn.status.toLowerCase()}</span>
                                             </div>
-                                            <div className="space-y-1">
-                                                <h4 className="text-lg font-bold text-slate-900">Quiet in here...</h4>
-                                                <p className="text-sm font-semibold text-slate-400 uppercase tracking-widest">No transaction data recorded for this account yet.</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <code className="text-[10px] font-mono text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">#{txn.id.slice(-8).toUpperCase()}</code>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div>
+                                                <p className="text-[11px] font-bold text-slate-900 leading-tight">{txn.customer}</p>
+                                                <p className="text-[9px] text-slate-400 font-medium mt-0.5">{txn.email || 'customer@node'}</p>
                                             </div>
-                                            <button className="mt-4 px-6 py-3 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10">Run Sandbox Test</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <p className="text-xs font-bold text-slate-900 leading-none">${formatPaise(txn.amount)}</p>
+                                            <p className="text-[9px] text-slate-400 mt-1 uppercase font-bold tracking-tighter">Liquid USD</p>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <p className="text-[11px] font-bold text-slate-900">{new Date(txn.date).toLocaleDateString([], { month: 'short', day: '2-digit' })}</p>
+                                            <p className="text-[9px] text-slate-400 mt-0.5 font-medium">{new Date(txn.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                        </td>
+                                    </motion.tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
 
-                <div className="px-10 py-6 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Page 1 — Data reflects live ledger state</p>
+                {/* Footer Controls */}
+                <div className="p-4 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                    <div className="flex items-center gap-6">
+                        <p className="font-bold text-slate-400 uppercase tracking-widest">Node count: <span className="text-slate-900">{transactions.length}</span></p>
+                        <div className="flex items-center gap-2">
+                            <p className="text-slate-400 uppercase tracking-widest font-bold">Rows:</p>
+                            <select className="bg-transparent font-bold text-slate-900 outline-none cursor-pointer">
+                                <option>10</option>
+                                <option>25</option>
+                            </select>
+                        </div>
+                    </div>
                     <div className="flex items-center gap-2">
-                        <button className="px-5 py-2 border border-slate-200 bg-white rounded-xl text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-all shadow-sm disabled:opacity-30" disabled>Previous</button>
-                        <button className="px-5 py-2 border border-slate-200 bg-white rounded-xl text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-all shadow-sm">Next Page</button>
+                        <button className="px-3 py-1.5 text-slate-300 font-bold uppercase tracking-widest transition-all hover:text-slate-900" disabled>Previous</button>
+                        <button className="px-3 py-1.5 text-slate-900 font-bold uppercase tracking-widest transition-all">Next</button>
                     </div>
                 </div>
             </div>

@@ -12,6 +12,7 @@ export const Profile: React.FC = () => {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [copied, setCopied] = useState(false);
+    const [revealedCard, setRevealedCard] = useState<{ cardNumber: string; cvv: string } | null>(null);
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -35,13 +36,26 @@ export const Profile: React.FC = () => {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const verifyCardPassword = async (password: string): Promise<boolean> => {
+    const verifyCardPassword = async (credential: string): Promise<boolean> => {
         try {
-            const email = user?.user?.email || merchant?.email;
-            if (!email) return false;
-            const { data } = await axios.post(`${API_BASE}/login`, { email, password });
-            return data.status === 'success';
-        } catch {
+            // Check if it's a 6-digit PIN or a password
+            const isPin = /^\d{6}$/.test(credential);
+            const payload = isPin ? { pin: credential } : { password: credential };
+
+            const { data } = await axios.post(`${API_BASE}/reveal-card`, payload, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (data.status === 'success') {
+                setRevealedCard({
+                    cardNumber: data.data.cardNumber,
+                    cvv: data.data.cvv
+                });
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error("Reveal card failed", err);
             return false;
         }
     };
@@ -170,9 +184,9 @@ export const Profile: React.FC = () => {
                     <div className="flex justify-center">
                         <FlippableCreditCard
                             cardholderName={name}
-                            cardNumber={user?.cards?.[0]?.cardNumber || ''}
+                            cardNumber={revealedCard?.cardNumber || user?.cards?.[0]?.cardNumber || ''}
                             expiryDate={`${user?.cards?.[0]?.expiryMonth || 12}/${user?.cards?.[0]?.expiryYear?.toString().padStart(2, '0') || '30'}`}
-                            cvv={'•••'}
+                            cvv={revealedCard?.cvv || '•••'}
                             spending={user?.user?.balance ? user.user.balance / 100 : 0}
                             requiresPassword={!!user?.cards?.[0]}
                             onPasswordVerify={verifyCardPassword}

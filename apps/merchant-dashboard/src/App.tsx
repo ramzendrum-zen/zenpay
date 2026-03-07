@@ -11,11 +11,11 @@ import { PersonalWallet } from './pages/PersonalWallet';
 import { Simulator } from './pages/Simulator';
 import { AuthPage } from './pages/AuthPage';
 import MerchantDemo from './pages/MerchantDemo';
-import { Profile } from './pages/Profile';
+
 
 const Settlements = () => <Dashboard />;
 const Refunds = () => <Dashboard />;
-const Subscribers = () => <Dashboard />;
+
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -47,11 +47,10 @@ const AppRoutes: React.FC = () => {
                 <Route path="/transactions" element={<Transactions />} />
                 <Route path="/settlements" element={<Settlements />} />
                 <Route path="/refunds" element={<Refunds />} />
-                <Route path="/subscribers" element={<Subscribers />} />
                 <Route path="/api-integration" element={<APIIntegration />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/personal" element={<PersonalWallet />} />
-                <Route path="/profile" element={<Profile />} />
+
                 <Route path="/simulator" element={<Simulator />} />
                 <Route path="*" element={<Dashboard />} />
               </Routes>

@@ -143,8 +143,8 @@ router.get('/me', authenticateUser, async (req: AuthRequest, res) => {
  */
 router.post('/reveal-card', authenticateUser, async (req: AuthRequest, res) => {
     try {
-        const { password } = req.body;
-        if (!password) return res.status(400).json({ status: 'error', error: 'Password required' });
+        const { password, pin } = req.body;
+        if (!password && !pin) return res.status(400).json({ status: 'error', error: 'Password or PIN required' });
 
         if (!req.userId) return res.status(401).json({ status: 'error', error: 'Personal wallet session missing.' });
 
@@ -155,8 +155,14 @@ router.post('/reveal-card', authenticateUser, async (req: AuthRequest, res) => {
 
         if (!user) return res.status(404).json({ status: 'error', error: 'Consumer wallet not found.' });
 
-        const isMatch = await bcrypt.compare(password, user.passwordHash);
-        if (!isMatch) return res.status(401).json({ status: 'error', error: 'Invalid password' });
+        let isMatch = false;
+        if (password) {
+            isMatch = await bcrypt.compare(password, user.passwordHash);
+        } else if (pin && user.transactionPinHash) {
+            isMatch = await bcrypt.compare(pin, user.transactionPinHash);
+        }
+
+        if (!isMatch) return res.status(401).json({ status: 'error', error: 'Invalid credentials' });
 
         const card = user.cards[0];
         if (!card) return res.status(404).json({ status: 'error', error: 'Card not found' });
@@ -270,6 +276,49 @@ router.post('/transfer', authenticateUser, async (req: AuthRequest, res) => {
         return res.json({ status: 'success', message: 'Transfer successful', data: { referenceId: result.refId } });
     } catch (error: any) {
         return res.status(400).json({ status: 'error', error: error.message });
+    }
+});
+
+/**
+ * POST /v1/consumer/top-up
+ * Simple endpoint to add simulated funds for the demo
+ */
+router.post('/top-up', authenticateUser, async (req: AuthRequest, res) => {
+    try {
+        const { amountPaise } = req.body;
+        if (!amountPaise || amountPaise <= 0) return res.status(400).json({ status: 'error', error: 'Invalid amount' });
+
+        if (!req.userId) {
+            console.error('❌ Top-up failed: User session could not be resolved. Ensure registration is complete.');
+            return res.status(401).json({ status: 'error', error: 'User wallet session missing' });
+        }
+
+        const result = await prisma.$transaction(async (tx) => {
+            const lastEntry = await tx.ledgerEntries.findFirst({
+                where: { userId: req.userId },
+                orderBy: { createdAt: 'desc' }
+            });
+            const currentBalance = lastEntry?.balanceAfter || 0;
+
+            const entry = await tx.ledgerEntries.create({
+                data: {
+                    userId: req.userId!,
+                    type: 'CREDIT',
+                    amountPaise,
+                    referenceType: 'TRANSFER',
+                    referenceId: `topup_${Date.now()}`,
+                    balanceAfter: currentBalance + amountPaise
+                }
+            });
+            return entry;
+        });
+
+        emitToUser(req.userId!, 'balance_update', { balance: result.balanceAfter });
+
+        return res.json({ status: 'success', message: 'Funds added successfully', data: { balance: result.balanceAfter } });
+    } catch (error: any) {
+        console.error('❌ Critical Top-up Error:', error);
+        return res.status(500).json({ status: 'error', error: 'Failed to process funding request' });
     }
 });
 

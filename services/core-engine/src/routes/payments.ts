@@ -42,20 +42,14 @@ async function transitionState(tx: any, paymentId: string, fromStatus: string, t
         throw new Error(`Invalid State Transition: Cannot transition from ${fromStatus} to ${toStatus}`);
     }
 
-    // Explicitly update the payment model and record the audit log transition
+    // Prisma interactive transactions MUST be executed sequentially. Parallel queries on the same tx object or ID will fail.
     await tx.payment.update({
         where: { id: paymentId },
         data: { status: toStatus as PaymentStatus, ...((toStatus === 'FAILED' && reason) ? { failedReason: reason } : {}) }
     });
 
     await tx.paymentStateTransition.create({
-        data: {
-            paymentId,
-            fromStatus,
-            toStatus,
-            actor,
-            reason
-        }
+        data: { paymentId, fromStatus, toStatus, actor, reason }
     });
 }
 
@@ -183,6 +177,8 @@ router.post('/capture', async (req, res) => {
                 orderBy: { createdAt: 'desc' }
             });
             const balance = lastEntry?.balanceAfter || 0;
+
+            console.log(`💰 [PAYMENT] Checking balance for User ${body.userId}: ${balance} paise. Required: ${order.amountPaise} paise.`);
 
             if (balance < order.amountPaise) {
                 // --- STATE: FAILED ---
