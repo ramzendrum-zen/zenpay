@@ -16,6 +16,7 @@ import { apiLogger } from './middleware/api-logger';
 import { idempotencyMiddleware } from './middleware/idempotency';
 import { startReconciliationEngine } from './services/reconciliation-engine';
 import { requestIdMiddleware } from './middleware/request-id';
+import { startSelfPingService } from './services/keep-alive';
 
 dotenv.config();
 
@@ -112,4 +113,7 @@ httpServer.listen(Number(PORT), '0.0.0.0', () => {
 
   // Priority 7: Start the Auto-Reversal & Reconciliation Engine
   startReconciliationEngine();
+
+  // Priority 8: Start the Keep-Alive Service (Self-Ping)
+  startSelfPingService();
 });

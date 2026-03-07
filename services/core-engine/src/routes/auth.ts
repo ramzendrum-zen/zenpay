@@ -36,9 +36,9 @@ router.post('/register', async (req, res) => {
                 return res.status(409).json({ status: 'error', error: 'An account with this email already exists and is already verified.' });
             }
             // Resume/Re-register flow for unverified merchant
-            const passwordHash = await bcrypt.hash(password, 12);
+            const passwordHash = await bcrypt.hash(password, 8);
             const { publicKey, secretKey } = generateMerchantKeys();
-            const secretKeyHash = await bcrypt.hash(secretKey + SALT, 10);
+            const secretKeyHash = await bcrypt.hash(secretKey + SALT, 8);
             const otpCode = generateOtp();
             const otpExpiryAt = otpExpiry();
 
@@ -71,9 +71,9 @@ router.post('/register', async (req, res) => {
         }
 
         console.log(`[AUTH] Registering new merchant: ${email}`);
-        const passwordHash = await bcrypt.hash(password, 12);
+        const passwordHash = await bcrypt.hash(password, 8);
         const { publicKey, secretKey } = generateMerchantKeys();
-        const secretKeyHash = await bcrypt.hash(secretKey + SALT, 10);
+        const secretKeyHash = await bcrypt.hash(secretKey + SALT, 8);
         const otp = generateOtp();
         const expiry = otpExpiry();
 
@@ -296,7 +296,7 @@ router.post('/reset-password', async (req, res) => {
             return res.status(400).json({ status: 'error', error: 'OTP has expired' });
         }
 
-        const passwordHash = await bcrypt.hash(newPassword, 12);
+        const passwordHash = await bcrypt.hash(newPassword, 8);
         await prisma.merchant.update({
             where: { email },
             data: { passwordHash, otpCode: null, otpExpiry: null }
