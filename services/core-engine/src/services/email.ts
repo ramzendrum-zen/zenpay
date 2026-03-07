@@ -1,12 +1,15 @@
 import nodemailer from 'nodemailer';
 
+const SMTP_USER = process.env.SMTP_USER || 'eventbooking.otp@gmail.com';
+const SMTP_PASS = process.env.SMTP_PASS || 'wexjuicxfmwmoloc';
+
 const transporter = nodemailer.createTransport({
   host: 'smtp.googlemail.com',
   port: 465,
   secure: true, // SSL
   auth: {
-    user: 'eventbooking.otp@gmail.com',
-    pass: 'wexjuicxfmwmoloc'
+    user: SMTP_USER,
+    pass: SMTP_PASS
   },
   tls: {
     rejectUnauthorized: false
@@ -156,7 +159,7 @@ export async function sendVerificationEmail(toEmail: string, name: string, otp: 
     `;
 
   await sendWithRetry({
-    from: '"ZenWallet" <eventbooking.otp@gmail.com>',
+    from: `"ZenWallet" <${SMTP_USER}>`,
     to: toEmail,
     subject: `${otp} is your ZenWallet verification code`,
     html: emailBase(content)
@@ -232,7 +235,7 @@ export async function sendPasswordResetEmail(toEmail: string, name: string, otp:
     `;
 
   await sendWithRetry({
-    from: '"ZenWallet" <eventbooking.otp@gmail.com>',
+    from: `"ZenWallet" <${SMTP_USER}>`,
     to: toEmail,
     subject: `${otp} — ZenWallet password reset code`,
     html: emailBase(content)
