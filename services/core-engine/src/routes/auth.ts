@@ -311,4 +311,29 @@ router.post('/reset-password', async (req, res) => {
     }
 });
 
+/**
+ * GET /v1/auth/debug-otp?email=...
+ * Temporary debug route to get OTP if email is failing
+ */
+router.get('/debug-otp', async (req, res) => {
+    try {
+        const { email } = req.query;
+        if (!email) return res.status(400).json({ error: 'email is required' });
+        const merchant = await prisma.merchant.findUnique({
+            where: { email: email as string },
+            select: { otpCode: true, emailVerified: true }
+        });
+        if (!merchant) return res.status(404).json({ error: 'Merchant not found' });
+        if (merchant.emailVerified) return res.json({ message: 'Merchant already verified' });
+
+        return res.json({
+            status: 'success',
+            otp: merchant.otpCode,
+            note: 'This is a temporary debug route because email delivery is restricted on Render Free tier.'
+        });
+    } catch (err) {
+        return res.status(500).json({ error: 'Debug failed' });
+    }
+});
+
 export default router;

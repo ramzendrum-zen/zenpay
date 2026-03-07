@@ -1,19 +1,16 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
+  service: 'gmail',
   host: 'smtp.gmail.com',
   port: 587,
-  secure: false, // Use STARTTLS
+  secure: false,
   auth: {
     user: 'eventbooking.otp@gmail.com',
-    pass: 'wexj uicx fmwm oloc'
+    pass: 'wexjuicxfmwmoloc' // Removed spaces for safety
   },
-  tls: {
-    rejectUnauthorized: false // Helps in some restricted environments
-  },
-  connectionTimeout: 15000, // 15 seconds
-  greetingTimeout: 10000,
-  socketTimeout: 20000
+  logger: true,
+  debug: true
 });
 
 export function generateOtp(): string {
