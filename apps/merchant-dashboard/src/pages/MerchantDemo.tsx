@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../lib/config';
 
 const MerchantDemo: React.FC = () => {
     const { merchant, token } = useAuth();
@@ -9,7 +10,7 @@ const MerchantDemo: React.FC = () => {
     const handleCheckout = async () => {
         try {
             // 1. Create a real test order record
-            const { data: orderRes } = await axios.post('http://localhost:4000/v1/orders', {
+            const { data: orderRes } = await axios.post(`${API_BASE}/orders`, {
                 amount: 1050000, // ₹ 10,500.00 in paise
                 currency: 'INR',
                 receipt: 'demo_' + Date.now()

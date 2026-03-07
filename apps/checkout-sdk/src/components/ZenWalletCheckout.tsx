@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import QRCode from 'react-qr-code';
 import axios from 'axios';
+import { API_BASE } from '../lib/config';
 import {
     CreditCard,
     QrCode,
@@ -32,7 +33,7 @@ type Step = 'LOADING' | 'SELECT_METHOD' | 'CARD_FORM' | 'UPI_FORM' | 'UPI_PIN' |
 
 type ValidationState = 'idle' | 'validating' | 'valid' | 'invalid';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/v1';
+
 
 export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey, onSuccess, onFailure, onClose }) => {
     const [step, setStep] = useState<Step>('LOADING');

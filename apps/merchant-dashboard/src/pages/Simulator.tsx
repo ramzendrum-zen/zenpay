@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../lib/config';
 import {
     Terminal,
     Settings,
@@ -54,7 +55,7 @@ export const Simulator: React.FC = () => {
         try {
             // 1. Create a real test order record so the Checkout SDK can fetch it
             addLog('Synchronizing order with node...', 'info');
-            const { data: orderRes } = await axios.post('http://localhost:4000/v1/orders', {
+            const { data: orderRes } = await axios.post(`${API_BASE}/orders`, {
                 amount: Math.round(parseFloat(config.amount) * 100),
                 currency: 'INR',
                 receipt: 'sim_' + Date.now()

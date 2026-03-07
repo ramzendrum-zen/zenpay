@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Loader2, Download, Plus, Search, Filter, Calendar, CheckCircle2, Clock, RotateCcw, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { API_BASE } from '../lib/config';
 
 export const Transactions: React.FC = () => {
     const { token } = useAuth();
@@ -12,7 +13,7 @@ export const Transactions: React.FC = () => {
     useEffect(() => {
         const fetchTxns = async () => {
             try {
-                const { data } = await axios.get('http://localhost:4000/v1/dashboard/transactions', {
+                const { data } = await axios.get(`${API_BASE}/dashboard/transactions`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (data.status === 'success') {

@@ -5,7 +5,8 @@ import { Fingerprint, Copy, Shield, Lock, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { FlippableCreditCard } from '../components/ui/credit-debit-card';
 
-const API_BASE = 'http://localhost:4000/v1/consumer';
+import { API_BASE as _API_BASE } from '../lib/config';
+const API_BASE = `${_API_BASE}/consumer`;
 
 export const Profile: React.FC = () => {
     const { token, merchant } = useAuth();

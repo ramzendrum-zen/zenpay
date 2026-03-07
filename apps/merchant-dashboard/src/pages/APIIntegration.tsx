@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
-const API_BASE = 'http://localhost:4000/v1';
+import { API_BASE } from '../lib/config';
 
 // ── Shared Minimal Components ───────────────────────────────────────────────
 const Badge = ({ children, variant = 'default' }: { children: React.ReactNode, variant?: 'default' | 'success' | 'warning' | 'error' | 'outline' }) => {
@@ -134,7 +134,7 @@ export const APIIntegration: React.FC = () => {
     const pubKey = keys.find((k: any) => !k.revokedAt)?.publicKey || 'pk_live_demo_123';
     const aiPrompt = `Implement ZenWallet integration using:
 - Public Key: ${pubKey}
-- API Endpoints: http://localhost:4000/v1
+- API Endpoints: ${API_BASE}
 - Security: HMAC-SHA256 signature verification`;
 
     return (

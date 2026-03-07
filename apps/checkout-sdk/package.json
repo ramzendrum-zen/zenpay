@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build:app": "vite build",
-        "build:loader": "BUILD_TARGET=loader vite build",
+        "build:loader": "vite build --mode loader",
         "build:all": "npm run build:app && npm run build:loader",
         "build": "npm run build:all",
         "preview": "vite preview"

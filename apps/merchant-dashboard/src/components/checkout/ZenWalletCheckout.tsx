@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_BASE } from '../../lib/config';
 
 interface CheckoutProps {
     orderId: string;
@@ -42,7 +43,7 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({
                 ? { orderId, cardNumber, expiry, cvv, userId: 'demo_user_123' }
                 : { orderId, upiId };
 
-            const API_BASE = 'http://localhost:4000/v1';
+
             const response = await axios.post(`${API_BASE}${endpoint}`, payload);
 
             if (response.data.status === 'success') {

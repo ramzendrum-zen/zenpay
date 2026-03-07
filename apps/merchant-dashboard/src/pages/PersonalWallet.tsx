@@ -16,8 +16,8 @@ import {
     X
 } from 'lucide-react';
 
-const API_BASE = 'http://localhost:4000/v1/consumer';
-const SOCKET_URL = 'http://localhost:4000';
+import { API_BASE as _API_BASE, SOCKET_URL } from '../lib/config';
+const API_BASE = `${_API_BASE}/consumer`;
 
 const AnimatedCounter = ({ value }: { value: number }) => {
     const [displayValue, setDisplayValue] = useState(value);

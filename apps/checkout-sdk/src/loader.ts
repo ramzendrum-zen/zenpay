@@ -47,8 +47,8 @@ class ZenWallet {
 
         const iframe = document.createElement("iframe");
 
-        // Pointing to our React App URL (in dev it's 5174, in prod it would be checkout.zenwallet.com)
-        const backendUrl = this.options.checkoutUrl || "http://localhost:5174/";
+        // Pointing to our React App URL (in dev it's 5174, in prod it's on the Render public folder)
+        const backendUrl = this.options.checkoutUrl || "https://zenpay-jshp.onrender.com/checkout/";
 
         const params = new URLSearchParams({
             key: this.options.key,
