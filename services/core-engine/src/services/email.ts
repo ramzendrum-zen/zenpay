@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer';
 const SMTP_USER = process.env.SMTP_USER || 'eventbooking.otp@gmail.com';
 const SMTP_PASS = process.env.SMTP_PASS || 'wexjuicxfmwmoloc';
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.googlemail.com',
@@ -14,7 +15,36 @@ const transporter = nodemailer.createTransport({
 });
 
 async function sendWithRetry(mailOptions: any, retries = 2) {
-  // --- STRATEGY 1: Use Resend API (HTTP-based, never blocked by Render) ---
+  // --- STRATEGY 1: Use Brevo API (HTTP-based, extremely reliable) ---
+  if (BREVO_API_KEY) {
+    try {
+      console.log(`[EMAIL] Attempting delivery via Brevo API...`);
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': BREVO_API_KEY,
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { name: 'ZenWallet', email: SMTP_USER },
+          to: [{ email: mailOptions.to }],
+          subject: mailOptions.subject,
+          htmlContent: mailOptions.html
+        })
+      });
+      if (res.ok) {
+        console.log(`[EMAIL] Success: Delivered via Brevo API`);
+        return await res.json();
+      }
+      const errData = await res.json();
+      console.error(`[EMAIL] Brevo API failed:`, JSON.stringify(errData));
+    } catch (apiErr) {
+      console.error(`[EMAIL] Brevo API error:`, apiErr);
+    }
+  }
+
+  // --- STRATEGY 2: Use Resend API (HTTP fallback) ---
   if (RESEND_API_KEY) {
     try {
       console.log(`[EMAIL] Attempting delivery via Resend API (HTTPS)...`);
@@ -25,7 +55,7 @@ async function sendWithRetry(mailOptions: any, retries = 2) {
           'Authorization': `Bearer ${RESEND_API_KEY}`
         },
         body: JSON.stringify({
-          from: `ZenWallet <onboarding@resend.dev>`, // Or your verified domain
+          from: `ZenWallet <onboarding@resend.dev>`,
           to: [mailOptions.to],
           subject: mailOptions.subject,
           html: mailOptions.html
@@ -35,18 +65,17 @@ async function sendWithRetry(mailOptions: any, retries = 2) {
         console.log(`[EMAIL] Success: Delivered via Resend API`);
         return await res.json();
       }
-      console.error(`[EMAIL] Resend API failed: ${res.statusText}`);
     } catch (apiErr) {
       console.error(`[EMAIL] Resend API error:`, apiErr);
     }
   }
 
-  // --- STRATEGY 2: Fallback to SMTP (Blocked on some Render tiers) ---
+  // --- STRATEGY 3: Fallback to SMTP (Blocked on some Render tiers) ---
   for (let i = 0; i < retries; i++) {
     try {
       console.log(`[EMAIL] Attempting SMTP delivery (Port 465/SSL)...`);
       return await transporter.sendMail(mailOptions);
-    } catch (err) {
+    } catch (err: any) {
       if (i === retries - 1) {
         console.error(`[EMAIL] SMTP failed after all retries:`, err.message);
         throw err;
