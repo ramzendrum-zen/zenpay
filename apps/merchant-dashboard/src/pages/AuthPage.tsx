@@ -101,6 +101,55 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
         } finally { setLoading(false); }
     };
 
+    const handleVerifyOtp = async (e: React.FormEvent) => {
+        e.preventDefault(); resetMessages(); setLoading(true);
+        const email = sessionStorage.getItem('zw_pending_email') || form.email;
+        try {
+            const { data } = await axios.post(`${API}/verify-otp`, { email, otp: form.otp });
+            if (data.status === 'success') {
+                toast.success('Email verified successfully');
+                onLoginSuccess(data.data.token, data.data.merchant);
+            }
+        } catch (err: any) {
+            setError(err.response?.data?.error || 'Verification failed.');
+        } finally { setLoading(false); }
+    };
+
+    const handleResendOtp = async () => {
+        resetMessages(); setLoading(true);
+        const email = sessionStorage.getItem('zw_pending_email') || form.email;
+        try {
+            await axios.post(`${API}/resend-otp`, { email });
+            toast.success('Fresh OTP sent to your email.');
+        } catch (err: any) {
+            setError('Failed to resend OTP.');
+        } finally { setLoading(false); }
+    };
+
+    const handleForgotPassword = async (e: React.FormEvent) => {
+        e.preventDefault(); resetMessages(); setLoading(true);
+        try {
+            const { data } = await axios.post(`${API}/forgot-password`, { email: form.email });
+            toast.success(data.message || 'Reset code sent.');
+            sessionStorage.setItem('zw_pending_email', form.email);
+            setView('reset-password');
+        } catch (err: any) {
+            setError(err.response?.data?.error || 'Recovery request failed.');
+        } finally { setLoading(false); }
+    };
+
+    const handleResetPassword = async (e: React.FormEvent) => {
+        e.preventDefault(); resetMessages(); setLoading(true);
+        const email = sessionStorage.getItem('zw_pending_email') || form.email;
+        try {
+            const { data } = await axios.post(`${API}/reset-password`, { email, otp: form.otp, newPassword: form.newPassword });
+            toast.success(data.message || 'Key updated. Try logging in.');
+            setView('login');
+        } catch (err: any) {
+            setError(err.response?.data?.error || 'Key update failed.');
+        } finally { setLoading(false); }
+    };
+
     return (
         <div className="flex min-h-screen bg-white font-sans overflow-hidden">
             {/* Minimal Left Content */}
@@ -168,7 +217,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                                         </div>
                                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Persistence</span>
                                     </label>
-                                    <button type="button" className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Recovery</button>
+                                    <button type="button" onClick={() => setView('forgot-password')} className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Recovery</button>
                                 </div>
 
                                 <button type="submit" disabled={loading} className="w-full h-12 bg-slate-900 text-white font-bold text-[11px] uppercase tracking-widest rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 group">
@@ -218,6 +267,91 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                                 </button>
 
                                 <p className="text-center text-[11px] text-slate-400 font-medium">Authorized user? <button type="button" onClick={() => setView('login')} className="text-blue-600 font-bold">Login Hub</button></p>
+                            </motion.form>
+                        )}
+
+                        {view === 'verify-otp' && (
+                            <motion.form
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                onSubmit={handleVerifyOtp}
+                                className="space-y-6"
+                            >
+                                <div className="space-y-1">
+                                    <h1 className="text-xl font-bold text-slate-900 tracking-tight">Activation Code</h1>
+                                    <p className="text-[11px] text-slate-400 font-medium">Verify your node status with the 6-digit key sent to your email.</p>
+                                </div>
+
+                                {error && <Alert msg={error} type="error" />}
+
+                                <div className="space-y-4">
+                                    <Field label="Verification Key" value={form.otp} onChange={(val: string) => setForm({ ...form, otp: val })} placeholder="000000" icon={ShieldCheck} />
+                                </div>
+
+                                <button type="submit" disabled={loading} className="w-full h-12 bg-emerald-600 text-white font-bold text-[11px] uppercase tracking-widest rounded-xl transition-all active:scale-95">
+                                    {loading ? 'Verifying...' : 'Verify Identity'}
+                                </button>
+
+                                <div className="flex flex-col gap-2 items-center">
+                                    <button type="button" onClick={handleResendOtp} disabled={loading} className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Resend Code</button>
+                                    <button type="button" onClick={() => setView('login')} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Back to Login</button>
+                                </div>
+                            </motion.form>
+                        )}
+
+                        {view === 'forgot-password' && (
+                            <motion.form
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                onSubmit={handleForgotPassword}
+                                className="space-y-6"
+                            >
+                                <div className="space-y-1">
+                                    <h1 className="text-xl font-bold text-slate-900 tracking-tight">Identity Recovery</h1>
+                                    <p className="text-[11px] text-slate-400 font-medium">Initialize a master recovery sequence.</p>
+                                </div>
+
+                                {error && <Alert msg={error} type="error" />}
+
+                                <div className="space-y-4">
+                                    <Field label="Node Email" type="email" value={form.email} onChange={(val: string) => setForm({ ...form, email: val })} placeholder="name@company.com" icon={Mail} />
+                                </div>
+
+                                <button type="submit" disabled={loading} className="w-full h-12 bg-slate-900 text-white font-bold text-[11px] uppercase tracking-widest rounded-xl transition-all active:scale-95">
+                                    {loading ? 'Searching...' : 'Request Recovery Key'}
+                                </button>
+
+                                <p className="text-center">
+                                    <button type="button" onClick={() => setView('login')} className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Abort & Login</button>
+                                </p>
+                            </motion.form>
+                        )}
+
+                        {view === 'reset-password' && (
+                            <motion.form
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                onSubmit={handleResetPassword}
+                                className="space-y-6"
+                            >
+                                <div className="space-y-1">
+                                    <h1 className="text-xl font-bold text-slate-900 tracking-tight">Update Master Key</h1>
+                                    <p className="text-[11px] text-slate-400 font-medium">Install a new security credential.</p>
+                                </div>
+
+                                {error && <Alert msg={error} type="error" />}
+
+                                <div className="space-y-4">
+                                    <Field label="Recovery Key" value={form.otp} onChange={(val: string) => setForm({ ...form, otp: val })} placeholder="000000" icon={ShieldCheck} />
+                                    <Field label="New Master Key" type="password" value={form.newPassword} onChange={(val: string) => setForm({ ...form, newPassword: val })} placeholder="Min 8 characters" icon={Lock} />
+                                </div>
+
+                                <button type="submit" disabled={loading} className="w-full h-12 bg-blue-600 text-white font-bold text-[11px] uppercase tracking-widest rounded-xl transition-all active:scale-95">
+                                    {loading ? 'Installing...' : 'Confirm Update'}
+                                </button>
                             </motion.form>
                         )}
                     </AnimatePresence>

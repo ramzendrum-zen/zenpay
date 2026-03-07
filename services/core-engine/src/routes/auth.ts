@@ -64,12 +64,14 @@ router.post('/register', async (req, res) => {
             });
         }
 
+        console.log(`[AUTH] Registering new merchant: ${email}`);
         const passwordHash = await bcrypt.hash(password, 12);
         const { publicKey, secretKey } = generateMerchantKeys();
         const secretKeyHash = await bcrypt.hash(secretKey + SALT, 10);
         const otp = generateOtp();
         const expiry = otpExpiry();
 
+        console.log(`[AUTH] Creating DB record for: ${email}`);
         const merchant = await prisma.merchant.create({
             data: {
                 name,
@@ -93,8 +95,14 @@ router.post('/register', async (req, res) => {
             }
         });
 
-        await sendVerificationEmail(email, name, otp);
-        console.log(`[AUTH] Verification OTP for ${email}: ${otp}`);
+        console.log(`[AUTH] Sending verification email to: ${email}`);
+        try {
+            await sendVerificationEmail(email, name, otp);
+            console.log(`[AUTH] Verification OTP for ${email}: ${otp}`);
+        } catch (emailErr) {
+            console.error(`[AUTH] Critical: Verification email failed for ${email}:`, emailErr);
+            // We still have the account created, but we should inform the user or ignore and log
+        }
 
         return res.status(201).json({
             status: 'success',
@@ -102,8 +110,13 @@ router.post('/register', async (req, res) => {
             data: { merchantId: merchant.id, email: merchant.email }
         });
     } catch (err: any) {
-        console.error('Register error:', err);
-        return res.status(500).json({ status: 'error', error: 'Registration failed' });
+        console.error('[AUTH] Register error details:', err);
+        return res.status(500).json({
+            status: 'error',
+            error: 'Registration failed internal error',
+            details: err.message,
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        });
     }
 });
 
