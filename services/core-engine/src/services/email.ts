@@ -1,7 +1,12 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, // true for port 465, false for other ports
+  pool: true, // Utilize connection pooling
+  maxConnections: 3,
+  maxMessages: 100,
   auth: {
     user: 'eventbooking.otp@gmail.com',
     pass: 'wexj uicx fmwm oloc'
