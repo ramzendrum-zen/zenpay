@@ -2,30 +2,56 @@ import nodemailer from 'nodemailer';
 
 const SMTP_USER = process.env.SMTP_USER || 'eventbooking.otp@gmail.com';
 const SMTP_PASS = process.env.SMTP_PASS || 'wexjuicxfmwmoloc';
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.googlemail.com',
   port: 465,
-  secure: true, // SSL
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
+  secure: true,
+  auth: { user: SMTP_USER, pass: SMTP_PASS },
   connectionTimeout: 30000,
   socketTimeout: 30000
 });
 
-// Helper for retries
 async function sendWithRetry(mailOptions: any, retries = 2) {
+  // --- STRATEGY 1: Use Resend API (HTTP-based, never blocked by Render) ---
+  if (RESEND_API_KEY) {
+    try {
+      console.log(`[EMAIL] Attempting delivery via Resend API (HTTPS)...`);
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${RESEND_API_KEY}`
+        },
+        body: JSON.stringify({
+          from: `ZenWallet <onboarding@resend.dev>`, // Or your verified domain
+          to: [mailOptions.to],
+          subject: mailOptions.subject,
+          html: mailOptions.html
+        })
+      });
+      if (res.ok) {
+        console.log(`[EMAIL] Success: Delivered via Resend API`);
+        return await res.json();
+      }
+      console.error(`[EMAIL] Resend API failed: ${res.statusText}`);
+    } catch (apiErr) {
+      console.error(`[EMAIL] Resend API error:`, apiErr);
+    }
+  }
+
+  // --- STRATEGY 2: Fallback to SMTP (Blocked on some Render tiers) ---
   for (let i = 0; i < retries; i++) {
     try {
+      console.log(`[EMAIL] Attempting SMTP delivery (Port 465/SSL)...`);
       return await transporter.sendMail(mailOptions);
     } catch (err) {
-      if (i === retries - 1) throw err;
-      console.log(`[EMAIL] Retry ${i + 1}...`);
+      if (i === retries - 1) {
+        console.error(`[EMAIL] SMTP failed after all retries:`, err.message);
+        throw err;
+      }
+      console.log(`[EMAIL] SMTP Timeout. Retrying in 2s...`);
       await new Promise(r => setTimeout(r, 2000));
     }
   }
