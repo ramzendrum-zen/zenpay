@@ -56,7 +56,13 @@ router.post('/register', async (req, res) => {
                 }
             });
 
-            await sendVerificationEmail(email, name, otpCode);
+            console.log(`[AUTH] Resending verification email to: ${email}`);
+            try {
+                await sendVerificationEmail(email, name, otpCode);
+            } catch (emailErr) {
+                console.error(`[AUTH] Critical: Re-verification email failed for ${email}:`, emailErr);
+            }
+
             return res.status(200).json({
                 status: 'success',
                 message: 'Existing unverified account updated. A new verification OTP has been sent to your email.',
