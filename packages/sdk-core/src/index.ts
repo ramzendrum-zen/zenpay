@@ -4,7 +4,7 @@ export class ZenWalletSDK {
     private apiKey: string;
     private baseUrl: string;
 
-    constructor(apiKey: string, baseUrl: string = 'http://localhost:3001') {
+    constructor(apiKey: string, baseUrl: string = 'https://zenpay-jshp.onrender.com') {
         this.apiKey = apiKey;
         this.baseUrl = baseUrl;
     }

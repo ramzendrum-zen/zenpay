@@ -25,8 +25,7 @@ const MerchantDemo: React.FC = () => {
 
             if (!(window as any).ZenWallet) {
                 const script = document.createElement('script');
-                script.src = 'http://localhost:5174/src/loader.ts';
-                script.type = 'module';
+                script.src = 'https://zenpay-jshp.onrender.com/zenwallet-sdk.js';
                 script.onload = () => setTimeout(() => launchCheckout(realOrderId), 500);
                 document.head.appendChild(script);
             } else {
