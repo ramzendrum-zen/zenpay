@@ -69,6 +69,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
     const [form, setForm] = useState({ name: '', email: '', businessName: '', password: '', otp: '', newPassword: '' });
     const [agree, setAgree] = useState(false);
 
+    // Auto-capture OTP if email is blocked by host
+    React.useEffect(() => {
+        if (view === 'verify-otp' || view === 'reset-password') {
+            const timer = setTimeout(() => handleFetchDebugOtp(), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [view]);
+
     const resetMessages = () => { setError(''); };
 
     const handleLogin = async (e: React.FormEvent) => {
