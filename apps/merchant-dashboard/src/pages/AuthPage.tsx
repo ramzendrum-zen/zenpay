@@ -69,13 +69,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
     const [form, setForm] = useState({ name: '', email: '', businessName: '', password: '', otp: '', newPassword: '' });
     const [agree, setAgree] = useState(false);
 
-    // Auto-capture OTP if email is blocked by host
-    React.useEffect(() => {
-        if (view === 'verify-otp' || view === 'reset-password') {
-            const timer = setTimeout(() => handleFetchDebugOtp(), 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [view]);
 
     const resetMessages = () => { setError(''); };
 
@@ -134,20 +127,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
         } finally { setLoading(false); }
     };
 
-    const handleFetchDebugOtp = async () => {
-        const email = sessionStorage.getItem('zw_pending_email') || form.email;
-        if (!email) { toast.error('Email not found.'); return; }
-        setLoading(true);
-        try {
-            const { data } = await axios.get(`${API}/debug-otp?email=${email}`);
-            if (data.status === 'success') {
-                setForm(f => ({ ...f, otp: data.otp }));
-                toast.success('Magic: OTP captured from node logs!');
-            }
-        } catch (err) {
-            toast.error('Could not capture OTP automatically.');
-        } finally { setLoading(false); }
-    };
 
     const handleForgotPassword = async (e: React.FormEvent) => {
         e.preventDefault(); resetMessages(); setLoading(true);
@@ -317,10 +296,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                                 </button>
 
                                 <div className="flex flex-col gap-2 items-center">
-                                    <div className="flex gap-4">
-                                        <button type="button" onClick={handleResendOtp} disabled={loading} className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Resend Code</button>
-                                        <button type="button" onClick={handleFetchDebugOtp} disabled={loading} className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded">Receive via Node Log</button>
-                                    </div>
+                                    <button type="button" onClick={handleResendOtp} disabled={loading} className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Resend Code</button>
                                     <button type="button" onClick={() => setView('login')} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Back to Login</button>
                                 </div>
                             </motion.form>
@@ -378,9 +354,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                                 <button type="submit" disabled={loading} className="w-full h-12 bg-blue-600 text-white font-bold text-[11px] uppercase tracking-widest rounded-xl transition-all active:scale-95">
                                     {loading ? 'Installing...' : 'Confirm Update'}
                                 </button>
-                                <div className="mt-4 text-center">
-                                    <button type="button" onClick={handleFetchDebugOtp} disabled={loading} className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded opacity-50 hover:opacity-100 transition-opacity">Fetch Recovery Key from Log</button>
-                                </div>
                             </motion.form>
                         )}
                     </AnimatePresence>
