@@ -1,17 +1,32 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
+  host: 'smtp.googlemail.com',
+  port: 465,
+  secure: true, // SSL
   auth: {
     user: 'eventbooking.otp@gmail.com',
-    pass: 'wexjuicxfmwmoloc' // Removed spaces for safety
+    pass: 'wexjuicxfmwmoloc'
   },
-  logger: true,
-  debug: true
+  tls: {
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 30000,
+  socketTimeout: 30000
 });
+
+// Helper for retries
+async function sendWithRetry(mailOptions: any, retries = 2) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await transporter.sendMail(mailOptions);
+    } catch (err) {
+      if (i === retries - 1) throw err;
+      console.log(`[EMAIL] Retry ${i + 1}...`);
+      await new Promise(r => setTimeout(r, 2000));
+    }
+  }
+}
 
 export function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -140,7 +155,7 @@ export async function sendVerificationEmail(toEmail: string, name: string, otp: 
       </table>
     `;
 
-  await transporter.sendMail({
+  await sendWithRetry({
     from: '"ZenWallet" <eventbooking.otp@gmail.com>',
     to: toEmail,
     subject: `${otp} is your ZenWallet verification code`,
@@ -216,7 +231,7 @@ export async function sendPasswordResetEmail(toEmail: string, name: string, otp:
       </table>
     `;
 
-  await transporter.sendMail({
+  await sendWithRetry({
     from: '"ZenWallet" <eventbooking.otp@gmail.com>',
     to: toEmail,
     subject: `${otp} — ZenWallet password reset code`,
