@@ -60,7 +60,7 @@ export const PersonalWallet: React.FC = () => {
     const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
     const [transferStatus, setTransferStatus] = useState<'idle' | 'sending' | 'success'>('idle');
     const [topUpStatus, setTopUpStatus] = useState<'idle' | 'loading' | 'success'>('idle');
-    const [transferForm, setTransferForm] = useState({ toUpiId: '', amount: '' });
+    const [transferForm, setTransferForm] = useState({ toUpiId: '', amount: '', note: '' });
     const [topUpAmount, setTopUpAmount] = useState('');
     const [isScanModalOpen, setIsScanModalOpen] = useState(false);
     const [scannedUpiId, setScannedUpiId] = useState('');
@@ -70,11 +70,35 @@ export const PersonalWallet: React.FC = () => {
     const [isSetupPinModalOpen, setIsSetupPinModalOpen] = useState(false);
     const [setupPinValue, setSetupPinValue] = useState('');
     const [setupPinStatus, setSetupPinStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+
+    const [qrMode, setQrMode] = useState<'display' | 'receive'>('display');
+    const [receiveAmount, setReceiveAmount] = useState('');
+    const [receiveNote, setReceiveNote] = useState('');
+    const [generatedQr, setGeneratedQr] = useState<string | null>(null);
+
     const wasInitialized = React.useRef(false);
 
     useEffect(() => {
         fetchWalletData();
     }, []);
+
+    useEffect(() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const payTarget = searchParams.get('pay');
+        const payAmount = searchParams.get('am');
+        const payNote = searchParams.get('tn');
+
+        if (payTarget) {
+            setTransferForm({
+                toUpiId: payTarget,
+                amount: payAmount || '',
+                note: payNote || ''
+            });
+            setIsTransferModalOpen(true);
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, [window.location.search]);
 
     useEffect(() => {
         if (!user?.user?.id) return;
@@ -158,14 +182,15 @@ export const PersonalWallet: React.FC = () => {
         try {
             await axios.post(`${API_BASE}/transfer`, {
                 toUpiId: transferForm.toUpiId,
-                amountPaise: Math.round(parseFloat(transferForm.amount) * 100)
+                amountPaise: Math.round(parseFloat(transferForm.amount) * 100),
+                note: transferForm.note
             }, { headers: { Authorization: `Bearer ${activeToken}` } });
 
             setTransferStatus('success');
             setTimeout(() => {
                 setIsTransferModalOpen(false);
                 setTransferStatus('idle');
-                setTransferForm({ toUpiId: '', amount: '' });
+                setTransferForm({ toUpiId: '', amount: '', note: '' });
                 fetchWalletData();
             }, 800);
         } catch { setTransferStatus('idle'); toast.error('Check funds'); }
@@ -368,19 +393,26 @@ export const PersonalWallet: React.FC = () => {
                     isTransferModalOpen && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/10 backdrop-blur-[2px]" onClick={() => setIsTransferModalOpen(false)} />
-                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white w-full max-w-[280px] rounded-2xl p-6 shadow-xl border border-slate-100">
-                                <h3 className="text-xs font-bold text-slate-900 mb-4 tracking-tight">Transfer Liquidity</h3>
-                                <form onSubmit={handleTransfer} className="space-y-4">
-                                    <div className="space-y-1">
-                                        <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest ml-1">Destination ID</label>
-                                        <input required type="text" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-[11px] font-bold text-slate-800 outline-none focus:border-blue-500/20" placeholder="user@zenpay" value={transferForm.toUpiId} onChange={e => setTransferForm({ ...transferForm, toUpiId: e.target.value })} />
+                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white w-full max-w-[320px] rounded-3xl p-8 shadow-2xl border border-slate-100">
+                                <h3 className="text-xs font-black text-slate-900 mb-6 uppercase tracking-widest text-center">Transfer Liquidity</h3>
+                                <form onSubmit={handleTransfer} className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Destination ID</label>
+                                        <input required type="text" className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-5 text-sm font-bold text-slate-800 outline-none focus:bg-white focus:border-blue-500/20 transition-all" placeholder="user@zenpay" value={transferForm.toUpiId} onChange={e => setTransferForm({ ...transferForm, toUpiId: e.target.value })} />
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest ml-1">Amount (₹)</label>
-                                        <input required type="number" step="0.01" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-lg font-bold text-slate-900 outline-none focus:border-blue-500/20" placeholder="0.00" value={transferForm.amount} onChange={e => setTransferForm({ ...transferForm, amount: e.target.value })} />
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Amount (₹)</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-400">₹</span>
+                                            <input required type="number" step="0.01" className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-5 text-2xl font-black text-slate-900 outline-none focus:bg-white focus:border-blue-500/20 transition-all tabular-nums" placeholder="0.00" value={transferForm.amount} onChange={e => setTransferForm({ ...transferForm, amount: e.target.value })} />
+                                        </div>
                                     </div>
-                                    <button type="submit" className="w-full h-11 bg-blue-600 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-md">
-                                        {transferStatus === 'sending' ? 'Clearing...' : 'Execute'}
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Note (Optional)</label>
+                                        <input type="text" className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-5 text-[11px] font-bold text-slate-700 outline-none focus:bg-white focus:border-blue-500/20 transition-all" placeholder="What's this for?" value={transferForm.note} onChange={e => setTransferForm({ ...transferForm, note: e.target.value })} />
+                                    </div>
+                                    <button type="submit" className="w-full h-14 bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 shadow-xl shadow-slate-900/10 mt-4">
+                                        {transferStatus === 'sending' ? 'Clearing...' : 'Execute Payment'}
                                     </button>
                                 </form>
                             </motion.div>
@@ -465,49 +497,132 @@ export const PersonalWallet: React.FC = () => {
                     isMyQrModalOpen && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/10 backdrop-blur-[2px]" onClick={() => setIsMyQrModalOpen(false)} />
-                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white w-full max-w-[320px] rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 text-center flex flex-col items-center">
-                                <div className="w-full flex justify-between items-center mb-8">
-                                    <div className="flex flex-col items-start gap-0.5">
+                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white w-full max-w-[340px] rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 text-center flex flex-col items-center">
+                                <div className="w-full flex justify-between items-center mb-6">
+                                    <div className="flex flex-col items-start gap-1">
                                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">My Payment QR</h3>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">ZenPay Ecosystem</p>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setQrMode('display')} className={`text-[8px] uppercase tracking-[0.2em] font-black px-2 py-1 rounded-md transition-all ${qrMode === 'display' ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400'}`}>Static</button>
+                                            <button onClick={() => setQrMode('receive')} className={`text-[8px] uppercase tracking-[0.2em] font-black px-2 py-1 rounded-md transition-all ${qrMode === 'receive' ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-slate-400'}`}>Receive</button>
+                                        </div>
                                     </div>
-                                    <button onClick={() => setIsMyQrModalOpen(false)} className="size-10 bg-slate-50 hover:bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 transition-all">
+                                    <button onClick={() => { setIsMyQrModalOpen(false); setQrMode('display'); setGeneratedQr(null); }} className="size-10 bg-slate-50 hover:bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 transition-all">
                                         <X size={18} />
                                     </button>
                                 </div>
 
-                                <div className="bg-white p-6 rounded-3xl shadow-xl shadow-blue-500/5 border border-slate-100 mb-8 relative">
-                                    <div className="absolute -top-1.5 -left-1.5 size-4 border-t-2 border-l-2 border-blue-500 rounded-tl-lg" />
-                                    <div className="absolute -top-1.5 -right-1.5 size-4 border-t-2 border-r-2 border-blue-500 rounded-tr-lg" />
-                                    <div className="absolute -bottom-1.5 -left-1.5 size-4 border-b-2 border-l-2 border-blue-500 rounded-bl-lg" />
-                                    <div className="absolute -bottom-1.5 -right-1.5 size-4 border-b-2 border-r-2 border-blue-500 rounded-br-lg" />
+                                {qrMode === 'display' ? (
+                                    <>
+                                        <div className="bg-white p-6 rounded-3xl shadow-xl shadow-blue-500/5 border border-slate-100 mb-8 relative">
+                                            <div className="absolute -top-1.5 -left-1.5 size-4 border-t-2 border-l-2 border-blue-500 rounded-tl-lg" />
+                                            <div className="absolute -top-1.5 -right-1.5 size-4 border-t-2 border-r-2 border-blue-500 rounded-tr-lg" />
+                                            <div className="absolute -bottom-1.5 -left-1.5 size-4 border-b-2 border-l-2 border-blue-500 rounded-bl-lg" />
+                                            <div className="absolute -bottom-1.5 -right-1.5 size-4 border-b-2 border-r-2 border-blue-500 rounded-br-lg" />
 
-                                    <div className="size-48 bg-white flex items-center justify-center overflow-hidden">
-                                        <QRCode
-                                            value={`upi://pay?pa=${user?.user?.upiId}&pn=${encodeURIComponent(user?.user?.name)}&cu=INR`}
-                                            size={180}
-                                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                                            viewBox={`0 0 256 256`}
-                                            level="M"
-                                        />
-                                    </div>
-                                </div>
+                                            <div className="size-48 bg-white flex items-center justify-center overflow-hidden">
+                                                <QRCode
+                                                    value={`upi://pay?pa=${user?.user?.upiId}&pn=${encodeURIComponent(user?.user?.name)}&cu=INR`}
+                                                    size={180}
+                                                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                                    viewBox={`0 0 256 256`}
+                                                    level="M"
+                                                />
+                                            </div>
+                                        </div>
 
-                                <div className="space-y-4 w-full">
-                                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center">
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5">Your UPI ID</p>
-                                        <p className="text-sm font-black text-slate-900 tracking-tight">{user?.user?.upiId}</p>
+                                        <div className="space-y-4 w-full">
+                                            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center">
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5">Your UPI ID</p>
+                                                <p className="text-sm font-black text-slate-900 tracking-tight">{user?.user?.upiId}</p>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(user?.user?.upiId);
+                                                    toast.success('UPI ID Copied');
+                                                }}
+                                                className="w-full h-12 bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <Copy size={14} /> Copy ID
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="w-full space-y-6">
+                                        {!generatedQr ? (
+                                            <div className="space-y-4">
+                                                <div className="space-y-2 text-left">
+                                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Receive Amount (₹)</label>
+                                                    <input
+                                                        type="number"
+                                                        className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-5 text-2xl font-black text-slate-900 outline-none focus:bg-white focus:border-emerald-500/20 transition-all tabular-nums"
+                                                        placeholder="0.00"
+                                                        value={receiveAmount}
+                                                        onChange={e => setReceiveAmount(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2 text-left">
+                                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Note / Description</label>
+                                                    <input
+                                                        type="text"
+                                                        className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-5 text-[11px] font-bold text-slate-700 outline-none focus:bg-white focus:border-emerald-500/20 transition-all"
+                                                        placeholder="What's this for?"
+                                                        value={receiveNote}
+                                                        onChange={e => setReceiveNote(e.target.value)}
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        if (!receiveAmount || parseFloat(receiveAmount) <= 0) {
+                                                            toast.error('Enter a valid amount');
+                                                            return;
+                                                        }
+                                                        const qrLink = `upi://pay?pa=${user?.user?.upiId}&pn=${encodeURIComponent(user?.user?.name)}&am=${receiveAmount}&tn=${encodeURIComponent(receiveNote)}&cu=INR`;
+                                                        setGeneratedQr(qrLink);
+                                                    }}
+                                                    className="w-full h-14 bg-emerald-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 shadow-xl shadow-emerald-600/10"
+                                                >
+                                                    Generate QR
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-8 flex flex-col items-center">
+                                                <div className="bg-white p-6 rounded-3xl shadow-xl shadow-emerald-500/5 border border-slate-100 relative">
+                                                    <div className="absolute -top-1.5 -left-1.5 size-4 border-t-2 border-l-2 border-emerald-500 rounded-tl-lg" />
+                                                    <div className="absolute -top-1.5 -right-1.5 size-4 border-t-2 border-r-2 border-emerald-500 rounded-tr-lg" />
+                                                    <div className="absolute -bottom-1.5 -left-1.5 size-4 border-b-2 border-l-2 border-emerald-500 rounded-bl-lg" />
+                                                    <div className="absolute -bottom-1.5 -right-1.5 size-4 border-b-2 border-r-2 border-emerald-500 rounded-br-lg" />
+
+                                                    <div className="size-48 bg-white flex items-center justify-center overflow-hidden">
+                                                        <QRCode
+                                                            value={generatedQr}
+                                                            size={180}
+                                                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                                            viewBox={`0 0 256 256`}
+                                                            level="M"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Receiving Amount</p>
+                                                    <p className="text-3xl font-black text-slate-900 tracking-tight">₹{parseFloat(receiveAmount).toFixed(2)}</p>
+                                                    {receiveNote && <p className="text-[10px] text-slate-500 font-bold italic">"{receiveNote}"</p>}
+                                                </div>
+
+                                                <button
+                                                    onClick={() => {
+                                                        setGeneratedQr(null);
+                                                        setReceiveAmount('');
+                                                        setReceiveNote('');
+                                                    }}
+                                                    className="w-full h-12 bg-slate-50 text-slate-400 font-black text-[9px] uppercase tracking-[0.2em] rounded-xl hover:text-slate-600 transition-all border border-slate-100"
+                                                >
+                                                    Create Another
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
-                                    <button
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(user?.user?.upiId);
-                                            toast.success('UPI ID Copied');
-                                        }}
-                                        className="w-full h-12 bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <Copy size={14} /> Copy ID
-                                    </button>
-                                </div>
+                                )}
                             </motion.div>
                         </div>
                     )

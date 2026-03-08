@@ -36,17 +36,25 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
     const handleScanResult = (result: string) => {
         setIsScannerOpen(false);
-        // Parse results like upi://pay?pa=user@zenpay...
-        if (result.includes('pa=')) {
+        // Handle UPI deep links: upi://pay?pa=...&am=...&tn=...
+        if (result.startsWith('upi://') || result.includes('pa=')) {
             try {
-                const upiId = new URL(result).searchParams.get('pa');
+                const url = result.startsWith('upi://') ? new URL(result.replace('upi://', 'http://')) : new URL(result);
+                const upiId = url.searchParams.get('pa');
+                const amount = url.searchParams.get('am');
+                const note = url.searchParams.get('tn');
+
                 if (upiId) {
-                    navigate(`/personal?pay=${upiId}`);
+                    let path = `/personal?pay=${upiId}`;
+                    if (amount) path += `&am=${amount}`;
+                    if (note) path += `&tn=${encodeURIComponent(note)}`;
+                    navigate(path);
                     return;
                 }
-            } catch (e) { /* fallback */ }
+            } catch (e) { console.error("Parse Error", e); }
         }
-        // Fallback or generic result
+
+        // Generic fallback
         navigate(`/personal?pay=${result}`);
     };
 
