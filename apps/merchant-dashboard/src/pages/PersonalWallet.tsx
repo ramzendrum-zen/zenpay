@@ -377,7 +377,7 @@ export const PersonalWallet: React.FC = () => {
                     <FlippableCreditCard
                         cardholderName={user?.user?.name || merchant?.name || 'ZenWallet User'}
                         cardNumber={revealedCard?.cardNumber || user?.cards?.[0]?.cardNumber || ''}
-                        expiryDate={`${user?.cards?.[0]?.expiryMonth || 12}/${user?.cards?.[0]?.expiryYear?.toString().padStart(2, '0') || '30'}`}
+                        expiryDate={`${user?.cards?.[0]?.expiryMonth?.toString().padStart(2, '0') || '12'}/${user?.cards?.[0]?.expiryYear?.toString().padStart(2, '0') || '30'}`}
                         cvv={revealedCard?.cvv || '•••'}
                         spending={user?.user?.balance ? user.user.balance / 100 : 0}
                         requiresPassword={!!user?.cards?.[0]}

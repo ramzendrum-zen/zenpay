@@ -134,7 +134,8 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
         (paise / 100).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
 
     const formatExpiry = (val: string) => {
-        const cleaned = val.replace(/\D/g, '').slice(0, 4);
+        let cleaned = val.replace(/\D/g, '').slice(0, 4);
+        if (cleaned.length === 1 && parseInt(cleaned) > 1) cleaned = '0' + cleaned;
         if (cleaned.length >= 3) return cleaned.slice(0, 2) + '/' + cleaned.slice(2);
         return cleaned;
     };
