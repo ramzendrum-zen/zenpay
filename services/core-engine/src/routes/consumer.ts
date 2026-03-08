@@ -441,5 +441,53 @@ router.post('/validate-upi', async (req, res) => {
         return res.status(500).json({ status: 'error', error: 'Validation failed' });
     }
 });
+/**
+ * POST /v1/consumer/top-up
+ * Adds funds to a user's wallet
+ */
+router.post('/top-up', authenticateUser, async (req: AuthRequest, res) => {
+    try {
+        const { amountPaise } = req.body;
+        if (!amountPaise || amountPaise <= 0) return res.status(400).json({ status: 'error', error: 'Invalid amount' });
+        if (!req.userId) return res.status(401).json({ status: 'error', error: 'Wallet missing' });
+
+        const result = await prisma.$transaction(async (tx) => {
+            const user = await tx.user.findUnique({ where: { id: req.userId } });
+            if (!user) throw new Error('User not found');
+
+            const lastEntry = await tx.ledgerEntries.findFirst({
+                where: { userId: user.id },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            const currentBalance = lastEntry?.balanceAfter || 0;
+            const newBalance = currentBalance + amountPaise;
+
+            const credit = await tx.ledgerEntries.create({
+                data: {
+                    userId: user.id,
+                    type: 'CREDIT',
+                    amountPaise,
+                    referenceType: 'TRANSFER',
+                    referenceId: `topup_${Date.now()}`,
+                    balanceAfter: newBalance
+                }
+            });
+
+            return { newBalance, creditId: credit.id };
+        });
+
+        // Notify client
+        emitToUser(req.userId, 'balance_update', {
+            type: 'CREDIT',
+            amountPaise: amountPaise,
+            balanceAfter: result.newBalance
+        });
+
+        return res.json({ status: 'success', data: { balance: result.newBalance } });
+    } catch (err: any) {
+        return res.status(500).json({ status: 'error', error: err.message || 'Failed to add funds' });
+    }
+});
 
 export default router;

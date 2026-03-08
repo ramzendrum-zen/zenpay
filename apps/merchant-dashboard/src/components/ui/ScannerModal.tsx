@@ -1,13 +1,58 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Camera, ShieldCheck, Zap } from 'lucide-react';
+import { X, Camera, ShieldCheck } from 'lucide-react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
+import toast from 'react-hot-toast';
 
 interface ScannerModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onResult?: (result: string) => void;
 }
 
-export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) => {
+export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose, onResult }) => {
+    const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+
+    useEffect(() => {
+        if (isOpen) {
+            // Give it a tiny bit to render the 'reader' div
+            const timeoutId = setTimeout(() => {
+                const scanner = new Html5QrcodeScanner(
+                    "reader",
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1.0,
+                    },
+                    /* verbose= */ false
+                );
+
+                scanner.render((decodedText) => {
+                    scanner.clear();
+                    scannerRef.current = null;
+                    if (onResult) {
+                        onResult(decodedText);
+                    } else {
+                        toast.success("Scanned: " + decodedText);
+                        onClose();
+                    }
+                }, () => {
+                    // silently handle scan failures
+                });
+
+                scannerRef.current = scanner;
+            }, 300);
+
+            return () => {
+                clearTimeout(timeoutId);
+                if (scannerRef.current) {
+                    scannerRef.current.clear().catch(e => console.error(e));
+                    scannerRef.current = null;
+                }
+            };
+        }
+    }, [isOpen, onResult, onClose]);
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -27,7 +72,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
                         className="relative w-full max-w-[420px] bg-white rounded-3xl overflow-hidden shadow-[0_25px_80px_rgba(0,0,0,0.3)] border border-white/20"
                     >
                         {/* Header */}
-                        <div className="p-6 pb-0 flex items-center justify-between">
+                        <div className="p-6 pb-2 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="size-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg">
                                     <Camera size={20} />
@@ -49,29 +94,24 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
 
                         {/* Scanner View Finder */}
                         <div className="p-6">
-                            <div className="relative aspect-square w-full rounded-2xl bg-slate-900 overflow-hidden flex items-center justify-center border-4 border-slate-50 shadow-inner">
-                                {/* Simulation Grid */}
-                                <div className="absolute inset-0 opacity-20 pointer-events-none"
+                            <div className="relative aspect-square w-full rounded-2xl bg-slate-900 overflow-hidden flex items-center justify-center border-4 border-slate-50 shadow-inner group">
+                                <div id="reader" className="w-full h-full bg-black" />
+
+                                {/* Simulation Grid Overlay for style */}
+                                <div className="absolute inset-0 opacity-10 pointer-events-none group-active:opacity-0 transition-opacity"
                                     style={{ backgroundImage: 'linear-gradient(#475569 1px, transparent 1px), linear-gradient(90deg, #475569 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
-                                <div className="z-10 flex flex-col items-center gap-4 text-center px-8">
-                                    <div className="size-16 rounded-full bg-white/10 flex items-center justify-center animate-pulse">
-                                        <Zap className="text-white" size={24} fill="white" />
-                                    </div>
-                                    <p className="text-white font-bold text-xs uppercase tracking-[0.2em] opacity-80">Initializing Lens...</p>
-                                </div>
-
                                 {/* Viewfinder Corners */}
-                                <div className="absolute top-8 left-8 size-10 border-t-4 border-l-4 border-blue-500 rounded-tl-xl" />
-                                <div className="absolute top-8 right-8 size-10 border-t-4 border-r-4 border-blue-500 rounded-tr-xl" />
-                                <div className="absolute bottom-8 left-8 size-10 border-b-4 border-l-4 border-blue-500 rounded-bl-xl" />
-                                <div className="absolute bottom-8 right-8 size-10 border-b-4 border-r-4 border-blue-500 rounded-br-xl" />
+                                <div className="absolute top-8 left-8 size-10 border-t-4 border-l-4 border-blue-500 rounded-tl-xl pointer-events-none z-20" />
+                                <div className="absolute top-8 right-8 size-10 border-t-4 border-r-4 border-blue-500 rounded-tr-xl pointer-events-none z-20" />
+                                <div className="absolute bottom-8 left-8 size-10 border-b-4 border-l-4 border-blue-500 rounded-bl-xl pointer-events-none z-20" />
+                                <div className="absolute bottom-8 right-8 size-10 border-b-4 border-r-4 border-blue-500 rounded-br-xl pointer-events-none z-20" />
 
                                 {/* Animated Scan Line */}
                                 <motion.div
                                     animate={{ top: ['20%', '80%', '20%'] }}
                                     transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                                    className="absolute left-12 right-12 h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)]"
+                                    className="absolute left-12 right-12 h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)] z-20 pointer-events-none"
                                 />
                             </div>
                         </div>

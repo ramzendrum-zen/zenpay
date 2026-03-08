@@ -34,6 +34,22 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     const isActive = (path: string) =>
         path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
+    const handleScanResult = (result: string) => {
+        setIsScannerOpen(false);
+        // Parse results like upi://pay?pa=user@zenpay...
+        if (result.includes('pa=')) {
+            try {
+                const upiId = new URL(result).searchParams.get('pa');
+                if (upiId) {
+                    navigate(`/personal?pay=${upiId}`);
+                    return;
+                }
+            } catch (e) { /* fallback */ }
+        }
+        // Fallback or generic result
+        navigate(`/personal?pay=${result}`);
+    };
+
     return (
         <div className="flex min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans">
             {/* ── Slim Minimal Sidebar ── */}
@@ -117,7 +133,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
             </main>
 
             {/* Global Scanner Modal */}
-            <ScannerModal isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} />
+            <ScannerModal
+                isOpen={isScannerOpen}
+                onClose={() => setIsScannerOpen(false)}
+                onResult={handleScanResult}
+            />
         </div>
     );
 };

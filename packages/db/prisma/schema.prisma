@@ -73,6 +73,7 @@ model ApiKey {
   id              String         @id @default(cuid())
   merchantId      String
   merchant        Merchant       @relation(fields: [merchantId], references: [id])
+  name            String         @default("Default App")
   publicKey       String         @unique
   secretKeyHash   String
   secretKey       String?        // Encrypted or restricted access
@@ -80,6 +81,7 @@ model ApiKey {
   createdAt       DateTime       @default(now())
   revokedAt       DateTime?
   lastUsedAt      DateTime?
+  orders          Order[]
 
   @@index([merchantId])
 }
@@ -97,7 +99,6 @@ model Webhook {
 
   @@index([merchantId])
 }
-
 model ApiLog {
   id              String         @id @default(cuid())
   merchantId      String
@@ -141,11 +142,12 @@ model Card {
 
   @@index([userId])
 }
-
 model Order {
   id              String         @id @default(cuid())
   merchantId      String
   merchant        Merchant       @relation(fields: [merchantId], references: [id])
+  apiKeyId        String?
+  apiKey          ApiKey?        @relation(fields: [apiKeyId], references: [id])
   amountPaise     Int            // stored in paise
   currency        String         @default("INR")
   receipt         String?

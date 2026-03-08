@@ -17,14 +17,53 @@ export const Dashboard: React.FC = () => {
     const [timeframe, setTimeframe] = useState('24h');
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<any>(null);
+    const [apiKeys, setApiKeys] = useState<any[]>([]);
+    const [selectedKey, setSelectedKey] = useState('all');
+    const [showUserMode, setShowUserMode] = useState(false);
+
+    useEffect(() => {
+        const fetchKeys = async () => {
+            try {
+                const res = await axios.get(`${API_BASE.replace('/consumer', '')}/dashboard/apikeys`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setApiKeys(res.data.data);
+            } catch (err) { console.error(err); }
+        };
+        fetchKeys();
+    }, [token]);
 
     useEffect(() => {
         const fetchStats = async () => {
+            setLoading(true);
             try {
-                const res = await axios.get(`${API_BASE}/dashboard/stats`, {
+                const endpoint = showUserMode
+                    ? `${API_BASE}/me` // Show personal wallet data
+                    : `${API_BASE.replace('/consumer', '')}/dashboard/stats?apiKeyId=${selectedKey}`;
+
+                const res = await axios.get(endpoint, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                setStats(res.data.data);
+
+                if (showUserMode) {
+                    // Adapt user data to dashboard format
+                    const user = res.data.data;
+                    setStats({
+                        totalVolumePaise: user.user.balance,
+                        successRate: '100',
+                        refundRate: '0.00',
+                        avgTicketPaise: 0,
+                        recentTransactions: user.ledgerEntries?.slice(0, 5).map((l: any) => ({
+                            id: l.id,
+                            amount: l.amountPaise,
+                            status: 'PAID',
+                            date: l.createdAt
+                        })) || [],
+                        trends: [20, 30, 40, 50, 60, 70, 80, 70, 60, 50, 40, 30] // Mock trend for personal wallet
+                    });
+                } else {
+                    setStats(res.data.data);
+                }
             } catch (err) {
                 console.error("Dashboard error:", err);
             } finally {
@@ -32,16 +71,21 @@ export const Dashboard: React.FC = () => {
             }
         };
         fetchStats();
-    }, [token]);
+    }, [token, selectedKey, showUserMode]);
 
-    const displayStats = [
-        { label: 'Settlement Volume', value: `₹ ${(stats?.totalVolumePaise / 100 || 0).toLocaleString()}`, change: '+12.5%', trend: 'up' }, // Change can be mocked for now or calculated if we had historical data
+    const displayStats = showUserMode ? [
+        { label: 'Available Balance', value: `₹ ${(stats?.totalVolumePaise / 100 || 0).toLocaleString()}`, change: '+0.0%', trend: 'up' },
+        { label: 'Wallet Reputation', value: 'Excellent', change: '+100%', trend: 'up' },
+        { label: 'Pending P2P', value: '0', change: '0', trend: 'down' },
+        { label: 'Total Settled', value: `₹ ${(stats?.totalVolumePaise / 100 || 0).toLocaleString()}`, change: '0', trend: 'up' },
+    ] : [
+        { label: 'Settlement Volume', value: `₹ ${(stats?.totalVolumePaise / 100 || 0).toLocaleString()}`, change: '+12.5%', trend: 'up' },
         { label: 'Success Velocity', value: `${stats?.successRate || 0}%`, change: '+0.4%', trend: 'up' },
         { label: 'Refund Rate', value: `${stats?.refundRate || 0}%`, change: '-2', trend: 'down' },
         { label: 'Avg Ticket', value: `₹ ${(stats?.avgTicketPaise / 100 || 0).toFixed(0)}`, change: '-12ms', trend: 'up' },
     ];
 
-    if (loading) return (
+    if (loading && !stats) return (
         <div className="flex items-center justify-center h-96">
             <Loader2 className="animate-spin text-blue-600" size={32} />
         </div>
@@ -49,13 +93,52 @@ export const Dashboard: React.FC = () => {
 
     return (
         <div className="w-full space-y-10 pb-20">
-            {/* Top Left Header */}
-            <div className="flex flex-col gap-1">
-                <h1 className="text-xl font-bold text-slate-900 tracking-tight">Executive Dashboard</h1>
-                <p className="text-xs text-slate-400 font-medium">Real-time oversight of payment orchestration and gateway health.</p>
-                <div className="flex items-center gap-2 mt-2">
-                    <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Network Status: Optimized</span>
+            {/* Top Left Header with Filtering */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                        {showUserMode ? 'Personal Liquidity' : 'Executive Dashboard'}
+                    </h1>
+                    <p className="text-xs text-slate-400 font-medium">
+                        {showUserMode ? 'Real-time overview of your P2P settlement nodes.' : 'Real-time oversight of payment orchestration and gateway health.'}
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    {/* Mode Toggle */}
+                    <div className="bg-slate-100 p-1 rounded-xl flex">
+                        <button
+                            onClick={() => setShowUserMode(false)}
+                            className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${!showUserMode ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
+                        >
+                            Merchant
+                        </button>
+                        <button
+                            onClick={() => setShowUserMode(true)}
+                            className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${showUserMode ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
+                        >
+                            Personal
+                        </button>
+                    </div>
+
+                    {/* API Key Dropdown */}
+                    {!showUserMode && (
+                        <div className="relative group">
+                            <select
+                                value={selectedKey}
+                                onChange={(e) => setSelectedKey(e.target.value)}
+                                className="appearance-none bg-white border border-slate-200 px-4 pr-10 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 outline-none focus:border-blue-500/20 shadow-sm transition-all cursor-pointer"
+                            >
+                                <option value="all">All API Nodes</option>
+                                {apiKeys.map(key => (
+                                    <option key={key.id} value={key.id}>{key.name || 'API Key'}</option>
+                                ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                <Filter size={12} />
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

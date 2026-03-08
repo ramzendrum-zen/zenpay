@@ -10,9 +10,16 @@ router.get('/stats', authenticateMerchant, async (req: AuthRequest, res) => {
         const merchantId = req.merchantId;
         if (!merchantId) return res.status(401).json({ status: 'error', error: 'Unauthorized' });
 
+        const { apiKeyId } = req.query;
+
         // 1. Get all orders for this merchant
+        const query: any = { merchantId };
+        if (apiKeyId && apiKeyId !== 'all') {
+            query.apiKeyId = apiKeyId as string;
+        }
+
         const orders = await prisma.order.findMany({
-            where: { merchantId },
+            where: query,
             include: { payments: true },
             orderBy: { createdAt: 'desc' }
         });
@@ -59,8 +66,15 @@ router.get('/stats', authenticateMerchant, async (req: AuthRequest, res) => {
 router.get('/transactions', authenticateMerchant, async (req: AuthRequest, res) => {
     try {
         const merchantId = req.merchantId;
+        const { apiKeyId } = req.query;
+
+        const query: any = { merchantId };
+        if (apiKeyId && apiKeyId !== 'all') {
+            query.apiKeyId = apiKeyId as string;
+        }
+
         const orders = await prisma.order.findMany({
-            where: { merchantId },
+            where: query,
             include: { payments: true },
             orderBy: { createdAt: 'desc' }
         });
@@ -143,6 +157,17 @@ router.post('/orders', authenticateMerchant, async (req: AuthRequest, res) => {
         res.json({ status: 'success', data: order });
     } catch (error) {
         res.status(500).json({ status: 'error', error: 'Failed to create order' });
+    }
+});
+
+router.get('/apikeys', authenticateMerchant, async (req: AuthRequest, res) => {
+    try {
+        const keys = await prisma.apiKey.findMany({
+            where: { merchantId: req.merchantId, revokedAt: null }
+        });
+        res.json({ status: 'success', data: keys.map(k => ({ id: k.id, name: k.name, publicKey: k.publicKey })) });
+    } catch (error) {
+        res.status(500).json({ status: 'error', error: 'Failed' });
     }
 });
 

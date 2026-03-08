@@ -43,12 +43,13 @@ router.post('/', authenticateMerchant, async (req: AuthRequest, res: Response) =
         const order = await prisma.order.create({
             data: {
                 merchantId: merchantId as string,
+                apiKeyId: req.apiKeyId ?? null,
                 amountPaise: amount,
                 currency,
                 receipt,
                 idempotencyKey: effectiveKey,
                 status: OrderStatus.PENDING
-            }
+            } as any
         });
 
         const successResponse = {
