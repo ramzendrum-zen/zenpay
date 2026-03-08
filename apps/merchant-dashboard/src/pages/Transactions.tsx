@@ -173,7 +173,7 @@ export const Transactions: React.FC = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <code className="text-[10px] font-mono text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">#{txn.id.slice(-8).toUpperCase()}</code>
+                                            <code className="text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">#{txn.id.slice(-8).toUpperCase()}</code>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div>

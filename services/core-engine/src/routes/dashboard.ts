@@ -81,8 +81,8 @@ router.get('/transactions', authenticateMerchant, async (req: AuthRequest, res) 
 
         const transactions = orders.map(o => ({
             id: o.id,
-            customer: o.receipt || 'Guest Customer',
-            email: 'customer@email.com',
+            customer: o.receipt || `Order #${o.id.slice(-6).toUpperCase()}`,
+            email: `customer${o.id.slice(-4)}@zen.pay`,
             amount: o.amountPaise,
             status: o.status,
             date: o.createdAt

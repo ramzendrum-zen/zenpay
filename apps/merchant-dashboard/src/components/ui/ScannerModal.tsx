@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Camera, ShieldCheck } from 'lucide-react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import toast from 'react-hot-toast';
 
 interface ScannerModalProps {
@@ -11,47 +11,55 @@ interface ScannerModalProps {
 }
 
 export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose, onResult }) => {
-    const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+    const scannerRef = useRef<Html5Qrcode | null>(null);
 
     useEffect(() => {
         if (isOpen) {
-            // Give it a tiny bit to render the 'reader' div
             const timeoutId = setTimeout(() => {
-                const scanner = new Html5QrcodeScanner(
-                    "reader",
-                    {
-                        fps: 10,
-                        qrbox: { width: 250, height: 250 },
-                        aspectRatio: 1.0,
-                    },
-                    /* verbose= */ false
-                );
+                try {
+                    const html5QrCode = new Html5Qrcode("reader");
+                    scannerRef.current = html5QrCode;
 
-                scanner.render((decodedText) => {
-                    scanner.clear();
-                    scannerRef.current = null;
-                    if (onResult) {
-                        onResult(decodedText);
-                    } else {
-                        toast.success("Scanned: " + decodedText);
-                        onClose();
-                    }
-                }, () => {
-                    // silently handle scan failures
-                });
-
-                scannerRef.current = scanner;
+                    html5QrCode.start(
+                        { facingMode: "environment" },
+                        {
+                            fps: 10,
+                            qrbox: { width: 250, height: 250 },
+                            aspectRatio: 1.0,
+                        },
+                        (decodedText) => {
+                            if (html5QrCode.isScanning) {
+                                html5QrCode.stop().then(() => html5QrCode.clear()).catch(console.error);
+                            }
+                            if (onResult) {
+                                onResult(decodedText);
+                            } else {
+                                toast.success("Scanned: " + decodedText);
+                                onClose();
+                            }
+                        },
+                        (errorMessage) => {
+                            // ignore decode errors
+                        }
+                    ).catch(err => {
+                        console.error('Camera Error:', err);
+                        toast.error('Could not access camera. Please check permissions.');
+                    });
+                } catch (e) {
+                    console.error("Scanner init error", e);
+                }
             }, 300);
 
             return () => {
                 clearTimeout(timeoutId);
-                if (scannerRef.current) {
-                    scannerRef.current.clear().catch(e => console.error(e));
-                    scannerRef.current = null;
+                if (scannerRef.current && scannerRef.current.isScanning) {
+                    scannerRef.current.stop().then(() => {
+                        scannerRef.current?.clear();
+                    }).catch(console.error);
                 }
             };
         }
-    }, [isOpen, onResult, onClose]);
+    }, [isOpen, onClose, onResult]);
 
     return (
         <AnimatePresence>
