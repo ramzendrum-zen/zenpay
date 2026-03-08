@@ -414,7 +414,7 @@ export const PersonalWallet: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-3 gap-3">
-                        <button onClick={() => setIsTransferModalOpen(true)} className="flex flex-col items-center justify-center gap-2 bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-600 transition-all group active:scale-95">
+                        <button onClick={() => { setTransferForm({ toUpiId: '', amount: '', note: '' }); setIsTransferModalOpen(true); }} className="flex flex-col items-center justify-center gap-2 bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-600 transition-all group active:scale-95">
                             <div className="size-10 bg-slate-50 rounded-full flex items-center justify-center group-hover:bg-blue-50 transition-colors">
                                 <ArrowUpRight size={18} />
                             </div>

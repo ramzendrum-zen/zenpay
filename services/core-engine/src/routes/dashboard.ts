@@ -164,7 +164,7 @@ router.get('/orders/:id', async (req, res) => {
                         currency: 'INR',
                         status: 'PENDING',
                         merchant: {
-                            businessName: 'Zenify Music (MOCK)',
+                            businessName: 'Zenify Music',
                             id: 'mock_merchant'
                         }
                     }

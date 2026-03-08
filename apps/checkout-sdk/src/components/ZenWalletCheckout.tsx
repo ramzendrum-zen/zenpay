@@ -425,79 +425,43 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                     <div className="animate-in fade-in duration-300 flex flex-col h-full">
                                         <div className="mb-6">
                                             <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Direct UPI</h2>
-                                            <p className="text-sm text-slate-500 mt-2">Enter credentials or scan to pay securely.</p>
+                                            <p className="text-sm text-slate-500 mt-2">Enter your ZenPay UPI ID to pay securely.</p>
                                         </div>
 
-                                        <div className="flex p-1 bg-slate-50 border border-slate-100 rounded-xl mb-8">
-                                            {[
-                                                { id: 'id' as const, label: 'UPI ID' },
-                                                { id: 'qr' as const, label: 'QR Code' },
-                                            ].map(tab => (
-                                                <button
-                                                    key={tab.id}
-                                                    onClick={() => setUpiTab(tab.id)}
-                                                    className={`flex-1 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${upiTab === tab.id ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
-                                                        }`}
-                                                >
-                                                    {tab.label}
-                                                </button>
-                                            ))}
-                                        </div>
-
-                                        {upiTab === 'id' && (
-                                            <form onSubmit={handleUpiPay} className="space-y-6 flex-1">
-                                                <div>
-                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">ZenPay UPI ID</label>
-                                                    <div className="relative">
-                                                        <input
-                                                            type="text"
-                                                            placeholder="number@zenpay"
-                                                            value={upiId}
-                                                            onChange={e => handleUpiChange(e.target.value)}
-                                                            className={`w-full h-12 bg-white border rounded-xl px-4 pr-24 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-200 ${upiValidation === 'valid' ? 'border-slate-900 focus:ring-4 focus:ring-slate-900/5' :
-                                                                upiValidation === 'invalid' ? 'border-red-500 focus:border-red-500' :
-                                                                    'border-slate-200 focus:border-slate-400'
-                                                                }`}
-                                                        />
-                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                                            {upiValidation === 'validating' && <Loader2 size={14} className="animate-spin text-slate-400" />}
-                                                            {upiValidation === 'valid' && <span className="text-[9px] font-bold text-white bg-slate-900 px-2 py-1 rounded">VERIFIED</span>}
-                                                            {upiValidation === 'invalid' && <AlertCircle size={14} className="text-red-500" />}
-                                                        </div>
-                                                    </div>
-                                                    {upiValidation === 'valid' && upiInfo && (
-                                                        <p className="mt-2 text-xs text-zinc-400">Account: <span className="text-white font-medium">{upiInfo.holderName}</span></p>
-                                                    )}
-                                                    {upiError && <p className="mt-1.5 text-xs text-red-500">{upiError}</p>}
-                                                </div>
-
-                                                <button
-                                                    type="submit"
-                                                    disabled={submitting || upiValidation !== 'valid'}
-                                                    className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-[0.2em] text-[11px] rounded-xl transition-all active:scale-[0.98] disabled:opacity-30 shadow-xl shadow-slate-900/10"
-                                                >
-                                                    Proceed
-                                                </button>
-                                            </form>
-                                        )}
-
-                                        {upiTab === 'qr' && (
-                                            <div className="flex flex-col items-center flex-1 py-4">
-                                                <div className="bg-white p-4 rounded-2xl shadow-xl mb-6">
-                                                    <div className="size-48 flex items-center justify-center bg-white">
-                                                        <QRCode
-                                                            value={`upi://pay?pa=merchant_${order?.merchantId || 'test'}@zenpay&pn=${encodeURIComponent(order?.merchant?.businessName || 'ZenPay')}&am=${(total / 100).toFixed(2)}&cu=INR`}
-                                                            size={180}
-                                                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                                                            viewBox={`0 0 256 256`}
-                                                            level="Q"
-                                                        />
+                                        <form onSubmit={handleUpiPay} className="space-y-6 flex-1">
+                                            <div className="pt-4">
+                                                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">ZenPay UPI ID</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="number@zenpay"
+                                                        value={upiId}
+                                                        onChange={e => handleUpiChange(e.target.value)}
+                                                        className={`w-full h-12 bg-white border rounded-xl px-4 pr-24 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-200 ${upiValidation === 'valid' ? 'border-slate-900 focus:ring-4 focus:ring-slate-900/5' :
+                                                            upiValidation === 'invalid' ? 'border-red-500 focus:border-red-500' :
+                                                                'border-slate-200 focus:border-slate-400'
+                                                            }`}
+                                                    />
+                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                        {upiValidation === 'validating' && <Loader2 size={14} className="animate-spin text-slate-400" />}
+                                                        {upiValidation === 'valid' && <span className="text-[9px] font-bold text-white bg-slate-900 px-2 py-1 rounded">VERIFIED</span>}
+                                                        {upiValidation === 'invalid' && <AlertCircle size={14} className="text-red-500" />}
                                                     </div>
                                                 </div>
-                                                <p className="text-xs text-zinc-400 uppercase tracking-widest font-semibold mb-2">Scan to Pay</p>
-                                                <p className="text-[10px] text-zinc-600 text-center max-w-[200px]">Use the ZenPay app to scan this secure QR code.</p>
+                                                {upiValidation === 'valid' && upiInfo && (
+                                                    <p className="mt-2 text-xs text-zinc-400">Account: <span className="text-white font-medium">{upiInfo.holderName}</span></p>
+                                                )}
+                                                {upiError && <p className="mt-1.5 text-xs text-red-500">{upiError}</p>}
                                             </div>
-                                        )}
+
+                                            <button
+                                                type="submit"
+                                                disabled={submitting || upiValidation !== 'valid'}
+                                                className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-[0.2em] text-[11px] rounded-xl transition-all active:scale-[0.98] disabled:opacity-30 shadow-xl shadow-slate-900/10"
+                                            >
+                                                Proceed
+                                            </button>
+                                        </form>
                                     </div>
                                 )}
 

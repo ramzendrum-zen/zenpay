@@ -213,8 +213,8 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({
                                 />
                             </div>
 
-                            <div className="mx-auto w-48 h-48 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-100 dark:border-slate-700">
-                                <span className="material-symbols-outlined text-6xl text-slate-300">qr_code_2</span>
+                            <div className="mx-auto w-full max-w-[300px] p-6 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Authorized Transaction Gateway</p>
                             </div>
 
                             <button
