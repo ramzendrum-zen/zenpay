@@ -54,10 +54,10 @@ const AnimatedCounter = ({ value }: { value: number }) => {
     const [whole, decimal] = formatted.split('.');
 
     return (
-        <span className="tabular-nums flex items-baseline">
-            <span className="text-slate-400 font-medium mr-0.5 text-2xl">₹</span>
-            <span className="text-slate-900">{whole}</span>
-            <span className="text-slate-400 text-2xl font-medium">.{decimal}</span>
+        <span className="tabular-nums flex items-baseline gap-0.5">
+            <span className="text-slate-400 font-medium text-lg">₹</span>
+            <span className="text-slate-900 text-2xl font-bold">{whole}</span>
+            <span className="text-slate-400 text-sm font-medium">.{decimal}</span>
         </span>
     );
 };
@@ -351,7 +351,7 @@ export const PersonalWallet: React.FC = () => {
                         <div className="space-y-0.5">
                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Wallet size={12} className="text-blue-600" /> Active UPI ID</p>
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold text-slate-800 tracking-tight">{user?.user?.upiId || '---'}</span>
+                                <span className="text-xs font-bold text-slate-500 tracking-tight">{user?.user?.upiId || '---'}</span>
                                 <button
                                     onClick={() => {
                                         if (user?.user?.upiId) {
@@ -359,16 +359,16 @@ export const PersonalWallet: React.FC = () => {
                                             toast.success('UPI ID Copied');
                                         }
                                     }}
-                                    className="p-1 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-blue-600 transition-all border border-transparent hover:border-slate-100"
+                                    className="p-1 hover:bg-slate-50 rounded-lg text-slate-300 hover:text-blue-600 transition-all border border-transparent hover:border-slate-100"
                                 >
-                                    <Copy size={12} />
+                                    <Copy size={11} />
                                 </button>
                             </div>
                         </div>
 
-                        <div className="space-y-0.5 mt-6 border-t border-slate-100 pt-6">
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Balance</p>
-                            <div className="text-2xl font-bold tracking-tight text-slate-800">
+                        <div className="space-y-0.5 mt-4 border-t border-slate-50 pt-4">
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Available Balance</p>
+                            <div className="text-xl font-bold tracking-tight text-slate-800">
                                 <AnimatedCounter value={user?.user?.balance || 0} />
                             </div>
                         </div>

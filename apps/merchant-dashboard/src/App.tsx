@@ -13,8 +13,10 @@ import { AuthPage } from './pages/AuthPage';
 import MerchantDemo from './pages/MerchantDemo';
 
 
+import { Refunds } from './pages/Refunds';
+
 const Settlements = () => <Dashboard />;
-const Refunds = () => <Dashboard />;
+// Removed mock Refunds
 
 
 // Protected route wrapper

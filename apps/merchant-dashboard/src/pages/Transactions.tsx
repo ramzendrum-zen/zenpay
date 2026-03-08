@@ -14,6 +14,8 @@ export const Transactions: React.FC = () => {
     const [showUserMode, setShowUserMode] = useState(false);
     const [walletToken] = useState<string | null>(localStorage.getItem('zw_wallet_token'));
     const [searchQuery, setSearchQuery] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     useEffect(() => {
         axios.get(`${API_BASE}/dashboard/apikeys`, { headers: { Authorization: `Bearer ${token}` } })
@@ -52,14 +54,21 @@ export const Transactions: React.FC = () => {
         if (token) fetchTxns();
     }, [token, selectedKey, showUserMode]);
 
-    const filtered = transactions.filter(t =>
-        !searchQuery ||
-        t.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.customer?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filtered = transactions.filter(t => {
+        const matchesSearch = !searchQuery ||
+            t.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            t.customer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (t.amount / 100).toString().includes(searchQuery);
+
+        const tDate = new Date(t.date);
+        const matchesDate = (!startDate || tDate >= new Date(startDate)) &&
+            (!endDate || tDate <= new Date(endDate));
+
+        return matchesSearch && matchesDate;
+    });
 
     const formatPaise = (paise: number) => {
-        return (paise / 100).toLocaleString('en-US', {
+        return (paise / 100).toLocaleString('en-IN', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
@@ -118,25 +127,39 @@ export const Transactions: React.FC = () => {
             {/* List & Filtering */}
             <div className="bg-white border border-slate-200/60 rounded-[2rem] shadow-sm overflow-hidden flex flex-col min-h-[500px]">
                 {/* Search & Utility Bar */}
-                <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-4">
-                    <div className="relative flex-1 max-w-xs">
+                <div className="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4 bg-slate-50/20">
+                    <div className="relative flex-1 min-w-[200px] max-w-xs">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            placeholder="Filter by ID or Customer..."
-                            className="w-full h-10 pl-9 pr-4 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-medium outline-none focus:border-blue-500/20 transition-all"
+                            placeholder="Search by ID, customer or amount..."
+                            className="w-full h-10 pl-9 pr-4 bg-white border border-slate-200 rounded-xl text-[11px] font-medium outline-none focus:border-blue-500/20 transition-all"
                         />
                     </div>
-                    <div className="flex gap-2">
-                        <button className="flex items-center gap-1.5 px-3 py-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest bg-white border border-slate-100 rounded-xl hover:text-slate-900">
-                            <Filter size={12} />
-                            Sort
-                        </button>
-                        <button className="flex items-center gap-1.5 px-3 py-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest bg-white border border-slate-100 rounded-xl hover:text-slate-900">
-                            <Calendar size={12} />
-                            History
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 h-10">
+                            <Calendar size={12} className="text-slate-400" />
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={e => setStartDate(e.target.value)}
+                                className="bg-transparent text-[10px] font-bold uppercase outline-none text-slate-600"
+                            />
+                            <span className="text-slate-300">-</span>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={e => setEndDate(e.target.value)}
+                                className="bg-transparent text-[10px] font-bold uppercase outline-none text-slate-600"
+                            />
+                        </div>
+                        <button
+                            onClick={() => { setStartDate(''); setEndDate(''); setSearchQuery(''); }}
+                            className="flex items-center gap-1.5 px-3 py-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest bg-white border border-slate-200 rounded-xl hover:text-red-500 transition-all"
+                        >
+                            Reset
                         </button>
                     </div>
                 </div>
@@ -151,11 +174,11 @@ export const Transactions: React.FC = () => {
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="bg-slate-50/10">
-                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Authority</th>
-                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Correlation ID</th>
-                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Metadata</th>
-                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">Volume</th>
-                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">Timestamp</th>
+                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Payment ID</th>
+                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Customer info</th>
+                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">Amount</th>
+                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">Date & Time</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100/60 font-medium">
@@ -199,7 +222,7 @@ export const Transactions: React.FC = () => {
                 {/* Footer Controls */}
                 <div className="p-4 border-t border-slate-100 flex items-center justify-between text-[11px]">
                     <div className="flex items-center gap-6">
-                        <p className="font-bold text-slate-400 uppercase tracking-widest">Node count: <span className="text-slate-900">{filtered.length}</span></p>
+                        <p className="font-bold text-slate-400 uppercase tracking-widest">Total records: <span className="text-slate-900">{filtered.length}</span></p>
                         <div className="flex items-center gap-2">
                             <p className="text-slate-400 uppercase tracking-widest font-bold">Rows:</p>
                             <select className="bg-transparent font-bold text-slate-900 outline-none cursor-pointer">

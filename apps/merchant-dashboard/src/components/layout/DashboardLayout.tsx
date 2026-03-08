@@ -11,12 +11,12 @@ interface DashboardLayoutProps {
 const NAV_ITEMS = [
     { name: 'Dashboard', icon: 'dashboard', path: '/' },
     { name: 'Transactions', icon: 'receipt_long', path: '/transactions' },
-    { name: 'Settlements', icon: 'account_balance_wallet', path: '/settlements' },
+    { name: 'Payouts', icon: 'account_balance_wallet', path: '/settlements' },
     { name: 'Scan & Pay', icon: 'qr_code_scanner', path: '/personal' },
     { name: 'Refunds', icon: 'undo', path: '/refunds' },
-    { name: 'Personal Wallet', icon: 'wallet', path: '/personal' },
-    { name: 'API Integration', icon: 'integration_instructions', path: '/api-integration' },
-    { name: 'Simulator', icon: 'terminal', path: '/simulator' },
+    { name: 'Wallet', icon: 'wallet', path: '/personal' },
+    { name: 'Developers', icon: 'integration_instructions', path: '/api-integration' },
+    { name: 'Test Payments', icon: 'terminal', path: '/simulator' },
     { name: 'Settings', icon: 'settings', path: '/settings' },
 ];
 
