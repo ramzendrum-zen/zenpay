@@ -15,8 +15,6 @@ import {
     History,
     ShieldCheck,
     X,
-    Bell,
-    CheckCircle2,
     Copy
 } from 'lucide-react';
 
@@ -63,8 +61,6 @@ export const PersonalWallet: React.FC = () => {
     const [topUpStatus, setTopUpStatus] = useState<'idle' | 'loading' | 'success'>('idle');
     const [transferForm, setTransferForm] = useState({ toUpiId: '', amount: '' });
     const [topUpAmount, setTopUpAmount] = useState('');
-    const [upiError, setUpiError] = useState('');
-    const [upiTab, setUpiTab] = useState<'id' | 'qr'>('id');
     const [isScanModalOpen, setIsScanModalOpen] = useState(false);
     const [scannedUpiId, setScannedUpiId] = useState('');
     const [revealedCard, setRevealedCard] = useState<{ cardNumber: string; cvv: string } | null>(null);
