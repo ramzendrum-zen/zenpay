@@ -203,7 +203,7 @@ const FlippableCreditCard = React.forwardRef<HTMLDivElement, FlippableCreditCard
                                                     setPwdError('');
                                                 }}
                                                 className={cn(
-                                                    "w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-5 pr-12 text-slate-900 outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all",
+                                                    "w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-5 pr-12 text-slate-900 outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all [&::-ms-reveal]:hidden [&::-webkit-reveal]:hidden",
                                                     unlockStep === 'PIN' ? "text-center text-3xl font-mono tracking-[0.5em] placeholder:tracking-normal" : "text-sm font-medium"
                                                 )}
                                             />

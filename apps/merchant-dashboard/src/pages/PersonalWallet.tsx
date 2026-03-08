@@ -274,19 +274,10 @@ export const PersonalWallet: React.FC = () => {
                 {/* ── Left Column: Primary Wallet Stats (4 Columns) ── */}
                 <div className="lg:col-span-4 space-y-4">
                     <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm relative group">
-                        <div className="flex justify-between items-start mb-6">
-                            <div className="size-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
-                                <Wallet size={16} />
-                            </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg">
-                                <span className="text-[10px] font-bold text-slate-700 uppercase tracking-tight">{user?.user?.upiId || 'Loading...'}</span>
-                            </div>
-                        </div>
-
                         <div className="space-y-0.5">
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Active UPI ID</p>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Wallet size={12} className="text-blue-600" /> Active UPI ID</p>
                             <div className="flex items-center gap-2">
-                                <span className="text-xl font-black text-slate-900 tracking-tight">{user?.user?.upiId || '---'}</span>
+                                <span className="text-sm font-semibold text-slate-800 tracking-tight">{user?.user?.upiId || '---'}</span>
                                 <button
                                     onClick={() => {
                                         if (user?.user?.upiId) {
@@ -294,23 +285,18 @@ export const PersonalWallet: React.FC = () => {
                                             toast.success('UPI ID Copied');
                                         }
                                     }}
-                                    className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-blue-600 transition-all border border-transparent hover:border-slate-100"
+                                    className="p-1 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-blue-600 transition-all border border-transparent hover:border-slate-100"
                                 >
-                                    <Copy size={14} />
+                                    <Copy size={12} />
                                 </button>
                             </div>
                         </div>
 
-                        <div className="space-y-0.5 mt-4">
+                        <div className="space-y-0.5 mt-6 border-t border-slate-100 pt-6">
                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Balance</p>
-                            <div className="text-3xl font-bold tracking-tight text-slate-900">
+                            <div className="text-2xl font-bold tracking-tight text-slate-800">
                                 <AnimatedCounter value={user?.user?.balance || 0} />
                             </div>
-                        </div>
-
-                        <div className="mt-8 flex gap-2">
-                            <button onClick={() => setIsTransferModalOpen(true)} className="flex-1 h-10 bg-blue-600 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-sm">Transfer</button>
-                            <button onClick={() => setIsTopUpModalOpen(true)} className="flex-1 h-10 bg-white text-slate-900 border border-slate-200 rounded-lg font-bold text-[10px] uppercase tracking-widest active:scale-95">Deposit</button>
                         </div>
                     </div>
 
@@ -324,50 +310,57 @@ export const PersonalWallet: React.FC = () => {
                         onPasswordVerify={verifyCardPassword}
                         className="w-full"
                     />
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <div onClick={() => setIsTopUpModalOpen(true)} className="bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm hover:border-blue-100 transition-all cursor-pointer group">
-                            <Plus size={14} className="text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-                            <h4 className="text-[10px] font-bold text-slate-900 uppercase">Add Funds</h4>
-                        </div>
-                        <div onClick={() => setIsMyQrModalOpen(true)} className="bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm hover:border-blue-100 transition-all cursor-pointer group">
-                            <QrCode size={14} className="text-emerald-500 mb-2 group-hover:scale-110 transition-transform" />
-                            <h4 className="text-[10px] font-bold text-slate-900 uppercase">My QR</h4>
-                        </div>
-                    </div>
-
-                    <div className="bg-slate-900 rounded-xl p-4 text-white relative overflow-hidden">
-                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-blue-400 flex items-center gap-1.5"><ShieldCheck size={10} /> Secure Node</h4>
-                        <p className="text-[10px] text-slate-500 mt-1 font-medium">Biometric signing is enabled.</p>
-                    </div>
                 </div>
 
                 {/* ── Right Column: Activity Feed (8 Columns) ── */}
-                <div className="lg:col-span-8 bg-white border border-slate-200/60 rounded-2xl shadow-sm flex flex-col min-h-[400px]">
-                    <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                        <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><History size={12} /> Ledger Activity</h3>
+                <div className="lg:col-span-8 flex flex-col gap-6">
+                    <div className="bg-white border border-slate-200/60 rounded-2xl shadow-sm flex flex-col min-h-[400px]">
+                        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                            <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><History size={12} /> Ledger Activity</h3>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto max-h-[500px] no-scrollbar p-2">
+                            {ledger.map((item) => (
+                                <div key={item.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-all border border-transparent">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`size-8 rounded-lg flex items-center justify-center border text-xs ${item.type === 'CREDIT' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                                            {item.type === 'CREDIT' ? <ArrowDownLeft size={14} /> : <ArrowUpRight size={14} />}
+                                        </div>
+                                        <div>
+                                            <p className="text-[11px] font-bold text-slate-900">{item.referenceType === 'TOPUP' ? 'Deposit' : 'Transfer'}</p>
+                                            <p className="text-[9px] text-slate-400 font-medium uppercase tracking-tighter">{new Date(item.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit' })}</p>
+                                        </div>
+                                    </div>
+                                    <p className={`text-[12px] font-bold ${item.type === 'CREDIT' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                        {item.type === 'CREDIT' ? '+' : '-'}₹{(item.amountPaise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto max-h-[500px] no-scrollbar p-2">
-                        {ledger.map((item) => (
-                            <div key={item.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-all border border-transparent">
-                                <div className="flex items-center gap-3">
-                                    <div className={`size-8 rounded-lg flex items-center justify-center border text-xs ${item.type === 'CREDIT' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
-                                        {item.type === 'CREDIT' ? <ArrowDownLeft size={14} /> : <ArrowUpRight size={14} />}
-                                    </div>
-                                    <div>
-                                        <p className="text-[11px] font-bold text-slate-900">{item.referenceType === 'TOPUP' ? 'Deposit' : 'Transfer'}</p>
-                                        <p className="text-[9px] text-slate-400 font-medium uppercase tracking-tighter">{new Date(item.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit' })}</p>
-                                    </div>
-                                </div>
-                                <p className={`text-[12px] font-bold ${item.type === 'CREDIT' ? 'text-emerald-600' : 'text-slate-900'}`}>
-                                    {item.type === 'CREDIT' ? '+' : '-'}₹{(item.amountPaise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </p>
+                    <div className="grid grid-cols-3 gap-3">
+                        <button onClick={() => setIsTransferModalOpen(true)} className="flex flex-col items-center justify-center gap-2 bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-600 transition-all group active:scale-95">
+                            <div className="size-10 bg-slate-50 rounded-full flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+                                <ArrowUpRight size={18} />
                             </div>
-                        ))}
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-700 group-hover:text-blue-600">Pay User</h4>
+                        </button>
+                        <button onClick={() => setIsTopUpModalOpen(true)} className="flex flex-col items-center justify-center gap-2 bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-600 transition-all group active:scale-95">
+                            <div className="size-10 bg-slate-50 rounded-full flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+                                <Plus size={18} />
+                            </div>
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-700 group-hover:text-blue-600">Add Funds</h4>
+                        </button>
+                        <button onClick={() => setIsMyQrModalOpen(true)} className="flex flex-col items-center justify-center gap-2 bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-600 transition-all group active:scale-95">
+                            <div className="size-10 bg-slate-50 rounded-full flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+                                <QrCode size={18} />
+                            </div>
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-700 group-hover:text-blue-600">My QR</h4>
+                        </button>
                     </div>
-                </div >
-            </div >
+                </div>
+            </div>
 
             {/* Modals - Minimal & Small */}
             <AnimatePresence>
