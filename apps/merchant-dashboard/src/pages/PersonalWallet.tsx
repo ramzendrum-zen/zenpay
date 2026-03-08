@@ -23,6 +23,17 @@ import {
 import { API_BASE as _API_BASE, SOCKET_URL } from '../lib/config';
 const API_BASE = `${_API_BASE}/consumer`;
 
+const PREMIUM_TOAST_STYLE = {
+    borderRadius: '16px',
+    background: '#09090b',
+    color: '#fff',
+    border: '1px solid rgba(255,255,255,0.08)',
+    fontSize: '11px',
+    fontWeight: '600',
+    padding: '12px 16px',
+    boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+};
+
 const AnimatedCounter = ({ value }: { value: number }) => {
     const [displayValue, setDisplayValue] = useState(value);
 
@@ -123,13 +134,9 @@ export const PersonalWallet: React.FC = () => {
         socket.on('payment_received', (data) => {
             const amt = (data.amount / 100).toFixed(2);
             toast.success(`Received ₹${amt} from ${data.from || 'ZenPay User'}`, {
-                duration: 4000,
-                style: {
-                    borderRadius: '12px',
-                    background: '#09090b',
-                    color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.05)',
-                }
+                duration: 5000,
+                style: PREMIUM_TOAST_STYLE,
+                icon: '💰'
             });
             fetchWalletData();
         });
@@ -204,6 +211,12 @@ export const PersonalWallet: React.FC = () => {
             setTransferStatus('success');
             if (pin) setPinStatus('success');
 
+            const amtDisplay = parseFloat(transferForm.amount).toFixed(2);
+            toast.success(`Payment Sent: ₹${amtDisplay} to ${transferForm.toUpiId}`, {
+                style: PREMIUM_TOAST_STYLE,
+                icon: '🚀'
+            });
+
             setTimeout(() => {
                 setIsTransferModalOpen(false);
                 setIsPinModalOpen(false);
@@ -237,6 +250,10 @@ export const PersonalWallet: React.FC = () => {
                 amountPaise: Math.round(parseFloat(topUpAmount) * 100),
             }, { headers: { Authorization: `Bearer ${activeToken}` } });
             setTopUpStatus('success');
+            toast.success(`Wallet Credited: ₹${parseFloat(topUpAmount).toFixed(2)}`, {
+                style: PREMIUM_TOAST_STYLE,
+                icon: '💳'
+            });
             setTimeout(() => {
                 setIsTopUpModalOpen(false);
                 setTopUpStatus('idle');
