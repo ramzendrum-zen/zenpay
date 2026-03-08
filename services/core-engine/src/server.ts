@@ -27,7 +27,8 @@ dotenv.config();
 const app = express();
 app.set('trust proxy', 1);
 const httpServer = createServer(app);
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 10000;
+console.log(`[SYS] Identified PORT: ${PORT} (from env.PORT: ${process.env.PORT})`);
 
 // In-memory idempotency store (Redis-ready interface)
 const idempotencyCache = new Map<string, { status: number; body: any; timestamp: number }>();
