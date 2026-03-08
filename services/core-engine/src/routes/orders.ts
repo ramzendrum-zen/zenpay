@@ -44,7 +44,7 @@ router.post('/', authenticateMerchant, async (req: AuthRequest, res: Response) =
         const order = await prisma.order.create({
             data: {
                 merchantId: merchantId as string,
-                amountPaise: amount,
+                amountPaise: Math.round(amount * 100),
                 currency,
                 receipt,
                 idempotencyKey,

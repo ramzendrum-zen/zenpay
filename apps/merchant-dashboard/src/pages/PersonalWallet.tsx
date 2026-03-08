@@ -99,8 +99,13 @@ export const PersonalWallet: React.FC = () => {
                 name: merchant?.name, email: merchant?.email, password: 'password123'
             });
             fetchWalletData();
-        } catch (e) {
-            setLoading(false);
+        } catch (error: any) {
+            // If user already exists, just try fetching data again
+            if (error.response?.data?.error?.includes('already exists')) {
+                fetchWalletData();
+            } else {
+                setLoading(false);
+            }
         }
     };
 
