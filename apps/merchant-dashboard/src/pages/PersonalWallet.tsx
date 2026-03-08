@@ -15,7 +15,8 @@ import {
     History,
     ShieldCheck,
     X,
-    Copy
+    Copy,
+    Lock
 } from 'lucide-react';
 
 import { API_BASE as _API_BASE, SOCKET_URL } from '../lib/config';
@@ -66,6 +67,9 @@ export const PersonalWallet: React.FC = () => {
     const [revealedCard, setRevealedCard] = useState<{ cardNumber: string; cvv: string } | null>(null);
     const [walletToken, setWalletToken] = useState<string | null>(localStorage.getItem('zw_wallet_token'));
     const [isMyQrModalOpen, setIsMyQrModalOpen] = useState(false);
+    const [isSetupPinModalOpen, setIsSetupPinModalOpen] = useState(false);
+    const [setupPinValue, setSetupPinValue] = useState('');
+    const [setupPinStatus, setSetupPinStatus] = useState<'idle' | 'loading' | 'success'>('idle');
     const wasInitialized = React.useRef(false);
 
     useEffect(() => {
@@ -205,10 +209,56 @@ export const PersonalWallet: React.FC = () => {
         } catch { return false; }
     };
 
+    const handleSetupPin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (setupPinValue.length !== 6) return;
+        setSetupPinStatus('loading');
+        const activeToken = walletToken || token;
+        try {
+            await axios.post(`${API_BASE}/setup-pin`, { pin: setupPinValue }, {
+                headers: { Authorization: `Bearer ${activeToken}` }
+            });
+            setSetupPinStatus('success');
+            setTimeout(() => {
+                setIsSetupPinModalOpen(false);
+                setSetupPinStatus('idle');
+                fetchWalletData();
+            }, 1000);
+        } catch (err: any) {
+            toast.error(err.response?.data?.error || 'Failed to setup PIN');
+            setSetupPinStatus('idle');
+        }
+    };
+
     if (loading) return null;
 
     return (
         <div className="w-full space-y-8 pb-20">
+            {/* Setup PIN Banner */}
+            {user?.user && !user?.user?.hasTransactionPin && (
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-blue-600 rounded-2xl p-4 flex items-center justify-between shadow-lg shadow-blue-600/20"
+                >
+                    <div className="flex items-center gap-3 text-white">
+                        <div className="size-8 bg-white/10 rounded-lg flex items-center justify-center">
+                            <ShieldCheck size={18} />
+                        </div>
+                        <div>
+                            <p className="text-xs font-black uppercase tracking-wider">Setup Security PIN</p>
+                            <p className="text-[10px] opacity-80 font-medium">Create a transaction PIN to proceed with payments securely.</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => setIsSetupPinModalOpen(true)}
+                        className="bg-white text-blue-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 transition-colors"
+                    >
+                        Setup Now
+                    </button>
+                </motion.div>
+            )}
+
             {/* Top Left Header */}
             <div className="flex flex-col gap-0.5">
                 <h1 className="text-lg font-bold text-slate-900 tracking-tight">Main Wallet</h1>
@@ -465,6 +515,45 @@ export const PersonalWallet: React.FC = () => {
                                         <Copy size={14} /> Copy ID
                                     </button>
                                 </div>
+                            </motion.div>
+                        </div>
+                    )
+                }
+                {/* Setup PIN Modal */}
+                {
+                    isSetupPinModalOpen && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/10 backdrop-blur-[2px]" onClick={() => setIsSetupPinModalOpen(false)} />
+                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white w-full max-w-[320px] rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 text-center flex flex-col items-center">
+                                <div className="flex flex-col items-center gap-4 mb-8">
+                                    <div className="size-16 bg-blue-50 rounded-3xl flex items-center justify-center text-blue-600">
+                                        <Lock size={32} />
+                                    </div>
+                                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Transaction Security</h3>
+                                    <p className="text-[10px] text-slate-500 font-medium">Create a 6-digit PIN for authorizing transfers and card reveals.</p>
+                                </div>
+
+                                <form onSubmit={handleSetupPin} className="w-full space-y-6">
+                                    <div className="relative">
+                                        <input
+                                            required
+                                            type="text"
+                                            maxLength={6}
+                                            placeholder="••••••"
+                                            value={setupPinValue}
+                                            onChange={e => setSetupPinValue(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                            className="w-full h-16 bg-slate-50 border border-slate-100 rounded-3xl px-4 text-center text-4xl font-mono tracking-[0.5em] text-slate-900 focus:bg-white focus:border-blue-500/20 transition-all outline-none placeholder:tracking-normal"
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={setupPinValue.length !== 6 || setupPinStatus === 'loading'}
+                                        className="w-full h-14 bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl active:scale-95 transition-all disabled:opacity-50"
+                                    >
+                                        {setupPinStatus === 'loading' ? 'Encrypting...' : setupPinStatus === 'success' ? 'PIN Active' : 'Enable Security'}
+                                    </button>
+                                </form>
                             </motion.div>
                         </div>
                     )

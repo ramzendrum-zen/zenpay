@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
     ArrowUpRight,
@@ -6,17 +6,46 @@ import {
     Zap,
     Clock,
     Filter,
+    Loader2
 } from 'lucide-react';
-
-const STATS = [
-    { label: 'Settlement Volume', value: '₹ 142.8k', change: '+12.5%', trend: 'up' },
-    { label: 'Success Velocity', value: '99.92%', change: '+0.4%', trend: 'up' },
-    { label: 'Active Sessions', value: '184', change: '-2', trend: 'down' },
-    { label: 'Liquidity Latency', value: '142ms', change: '-12ms', trend: 'up' },
-];
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../lib/config';
 
 export const Dashboard: React.FC = () => {
+    const { token } = useAuth();
     const [timeframe, setTimeframe] = useState('24h');
+    const [loading, setLoading] = useState(true);
+    const [stats, setStats] = useState<any>(null);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await axios.get(`${API_BASE}/dashboard/stats`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setStats(res.data.data);
+            } catch (err) {
+                console.error("Dashboard error:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStats();
+    }, [token]);
+
+    const displayStats = [
+        { label: 'Settlement Volume', value: `₹ ${(stats?.totalVolumePaise / 100 || 0).toLocaleString()}`, change: '+12.5%', trend: 'up' }, // Change can be mocked for now or calculated if we had historical data
+        { label: 'Success Velocity', value: `${stats?.successRate || 0}%`, change: '+0.4%', trend: 'up' },
+        { label: 'Refund Rate', value: `${stats?.refundRate || 0}%`, change: '-2', trend: 'down' },
+        { label: 'Avg Ticket', value: `₹ ${(stats?.avgTicketPaise / 100 || 0).toFixed(0)}`, change: '-12ms', trend: 'up' },
+    ];
+
+    if (loading) return (
+        <div className="flex items-center justify-center h-96">
+            <Loader2 className="animate-spin text-blue-600" size={32} />
+        </div>
+    );
 
     return (
         <div className="w-full space-y-10 pb-20">
@@ -32,7 +61,7 @@ export const Dashboard: React.FC = () => {
 
             {/* Metrics Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {STATS.map((stat, i) => (
+                {displayStats.map((stat, i) => (
                     <div key={i} className="bg-white border border-slate-200/60 p-5 rounded-2xl shadow-sm group hover:border-blue-100 transition-all">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
                         <div className="flex items-end justify-between mt-3">
@@ -63,7 +92,7 @@ export const Dashboard: React.FC = () => {
 
                     {/* Simulated Chart */}
                     <div className="flex-1 flex items-end gap-2 pb-2">
-                        {[40, 70, 45, 90, 65, 80, 55, 95, 75, 85, 60, 100].map((h, i) => (
+                        {(stats?.trends || [40, 70, 45, 90, 65, 80, 55, 95, 75, 85, 60, 100]).map((h: number, i: number) => (
                             <motion.div key={i} initial={{ height: 0 }} animate={{ height: `${h}%` }} transition={{ delay: i * 0.05, type: 'spring' }} className="flex-1 bg-slate-100 group-hover:bg-blue-500/20 rounded-t-md transition-colors relative">
                                 {i === 11 && <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full pb-2 text-[9px] font-bold text-blue-600">Peak</div>}
                             </motion.div>
@@ -81,21 +110,16 @@ export const Dashboard: React.FC = () => {
                         <Filter size={14} className="text-slate-300 cursor-pointer" />
                     </div>
                     <div className="flex-1 overflow-y-auto no-scrollbar p-2">
-                        {[
-                            { id: '4021', amt: '₹1,200', status: 'success', time: 'Just now' },
-                            { id: '3982', amt: '₹4,500', status: 'success', time: '2m ago' },
-                            { id: '3951', amt: '₹850', status: 'pending', time: '5m ago' },
-                            { id: '3912', amt: '₹2,100', status: 'success', time: '12m ago' },
-                        ].map((tx, i) => (
+                        {(stats?.recentTransactions || []).map((tx: any, i: number) => (
                             <div key={i} className="flex items-center justify-between p-4 rounded-xl hover:bg-slate-50 transition-all">
                                 <div className="flex items-center gap-3">
-                                    <div className={`size-2 rounded-full ${tx.status === 'success' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                    <div className={`size-2 rounded-full ${tx.status === 'PAID' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                                     <div>
-                                        <p className="text-xs font-bold text-slate-900">TX-{tx.id}</p>
-                                        <p className="text-[9px] text-slate-400 uppercase font-medium">{tx.time}</p>
+                                        <p className="text-xs font-bold text-slate-900">ID: {tx.id.slice(-6).toUpperCase()}</p>
+                                        <p className="text-[9px] text-slate-400 uppercase font-medium">{new Date(tx.date).toLocaleTimeString()}</p>
                                     </div>
                                 </div>
-                                <p className="text-xs font-bold text-slate-900">{tx.amt}</p>
+                                <p className="text-xs font-bold text-slate-900">₹{(tx.amount / 100).toLocaleString()}</p>
                             </div>
                         ))}
                     </div>

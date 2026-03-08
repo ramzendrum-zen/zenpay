@@ -275,8 +275,15 @@ const FlippableCreditCard = React.forwardRef<HTMLDivElement, FlippableCreditCard
                                 </div>
                                 <div className="flex justify-center -mt-4">
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); if (!masked) copyToClipboard(cardNumber, "Card number", e); }}
-                                        className={cn("group/copy px-5 py-2.5 rounded-2xl transition-all relative border border-transparent flex items-center gap-3", !masked && "hover:bg-white/10 active:scale-95 cursor-copy")}
+                                        onClick={(e) => {
+                                            if (masked) return;
+                                            e.stopPropagation();
+                                            copyToClipboard(cardNumber, "Card number", e);
+                                        }}
+                                        className={cn(
+                                            "group/copy px-5 py-2.5 rounded-2xl transition-all relative border border-transparent flex items-center gap-3",
+                                            !masked ? "hover:bg-white/10 active:scale-95 cursor-copy" : "pointer-events-none"
+                                        )}
                                     >
                                         <div className="font-mono text-xl tracking-[0.2em] text-slate-200 whitespace-nowrap group-hover/copy:text-white transition-colors">
                                             {displayCard}
