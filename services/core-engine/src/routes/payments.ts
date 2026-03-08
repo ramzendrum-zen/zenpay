@@ -184,21 +184,30 @@ router.post('/capture', async (req, res) => {
         // Priority 4: Concurrency Safety with Retry Loop for PRISMA Serializable
         const result = await withTransactionRetry(() => prisma.$transaction(async (tx) => {
             let order = await tx.order.findUnique({ where: { id: body.orderId }, include: { merchant: true } });
-
-            // Handle mock orders within transaction
-            if (!order && body.orderId.startsWith('mock_')) {
-                order = existingOrder;
-            }
+            const isMock = !order && body.orderId.startsWith('mock_');
+            if (isMock) order = existingOrder;
 
             if (!order || order.status !== 'PENDING') throw new Error('Order is already processed or invalid');
 
-            // --- STATE: CREATED ---
-            const payment = await tx.payment.create({
-                data: { orderId: order.id, userId: body.userId, method: body.method, status: 'CREATED', amountPaise: order.amountPaise, riskScore: risk.score }
-            });
-
-            // --- STATE: AUTHORIZED ---
-            await transitionState(tx, payment.id, 'CREATED', 'AUTHORIZED', 'system', 'Payment Authorization Initialized');
+            // --- STATE: CREATED (Simulated if mock) ---
+            let payment: any;
+            if (!isMock) {
+                payment = await tx.payment.create({
+                    data: { orderId: order.id, userId: body.userId, method: body.method, status: 'CREATED', amountPaise: order.amountPaise, riskScore: risk.score }
+                });
+                // --- STATE: AUTHORIZED ---
+                await transitionState(tx, payment.id, 'CREATED', 'AUTHORIZED', 'system', 'Payment Authorization Initialized');
+            } else {
+                payment = {
+                    id: 'mock_pmt_' + Date.now(),
+                    orderId: order.id,
+                    userId: body.userId,
+                    method: body.method,
+                    status: 'CREATED',
+                    amountPaise: order.amountPaise,
+                    riskScore: 0
+                };
+            }
 
             // Ledger Concurrency check
             const lastEntry = await tx.ledgerEntries.findFirst({
@@ -210,13 +219,15 @@ router.post('/capture', async (req, res) => {
             console.log(`💰 [PAYMENT] Checking balance for User ${body.userId}: ${balance} paise. Required: ${order.amountPaise} paise.`);
 
             if (balance < order.amountPaise) {
-                // --- STATE: FAILED ---
-                await transitionState(tx, payment.id, 'AUTHORIZED', 'FAILED', 'system', 'Insufficient wallet balance');
+                if (!isMock) {
+                    await transitionState(tx, payment.id, 'AUTHORIZED', 'FAILED', 'system', 'Insufficient wallet balance');
+                }
                 throw new Error('Insufficient wallet balance');
             }
 
-            const signature = crypto.createHmac("sha256", order.merchant.secretKey || 'sim_secret').update(`${order.id}|${payment.id}`).digest("hex");
+            const signature = crypto.createHmac("sha256", order.merchant?.secretKey || 'sim_secret').update(`${order.id}|${payment.id}`).digest("hex");
 
+            // Still record the ledger entry so the user sees their balance decrease
             await tx.ledgerEntries.create({
                 data: {
                     userId: body.userId, type: 'DEBIT', amountPaise: order.amountPaise,
@@ -224,15 +235,18 @@ router.post('/capture', async (req, res) => {
                 }
             });
 
-            // Need to update signature which isn't part of transition method natively, so update explicitly here
-            await tx.payment.update({ where: { id: payment.id }, data: { capturedAt: new Date(), signature } });
+            if (!isMock) {
+                // Need to update signature which isn't part of transition method natively, so update explicitly here
+                await tx.payment.update({ where: { id: payment.id }, data: { capturedAt: new Date(), signature } });
 
-            // --- STATE: CAPTURED ---
-            await transitionState(tx, payment.id, 'AUTHORIZED', 'CAPTURED', 'system', 'Payment successfully settled to ledger');
+                // --- STATE: CAPTURED ---
+                await transitionState(tx, payment.id, 'AUTHORIZED', 'CAPTURED', 'system', 'Payment successfully settled to ledger');
 
-            const updatedOrder = await tx.order.update({ where: { id: order.id }, data: { status: 'PAID' } });
+                const updatedOrder = await tx.order.update({ where: { id: order.id }, data: { status: 'PAID' } });
+                return { payment: { ...payment, signature }, order: updatedOrder, merchantId: order.merchantId };
+            }
 
-            return { payment: { ...payment, signature }, order: updatedOrder, merchantId: order.merchantId };
+            return { payment: { ...payment, signature, status: 'CAPTURED' }, order: { ...order, status: 'PAID' }, merchantId: order.merchantId };
         }, { isolationLevel: 'Serializable' }));
 
         dispatchWebhook(result.merchantId, 'payment.captured', { payment_id: result.payment.id, order_id: result.order.id, amount: result.payment.amountPaise, status: 'captured' });
