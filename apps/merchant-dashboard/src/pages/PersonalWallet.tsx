@@ -64,6 +64,7 @@ export const PersonalWallet: React.FC = () => {
     const [isScanModalOpen, setIsScanModalOpen] = useState(false);
     const [scannedUpiId, setScannedUpiId] = useState('');
     const [revealedCard, setRevealedCard] = useState<{ cardNumber: string; cvv: string } | null>(null);
+    const [walletToken, setWalletToken] = useState<string | null>(localStorage.getItem('zw_wallet_token'));
     const wasInitialized = React.useRef(false);
 
     useEffect(() => {
@@ -75,9 +76,10 @@ export const PersonalWallet: React.FC = () => {
 
     const fetchWalletData = async () => {
         try {
+            const activeToken = walletToken || token;
             const [meRes, ledgerRes] = await Promise.all([
-                axios.get(`${API_BASE}/me`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${API_BASE}/ledger`, { headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${API_BASE}/me`, { headers: { Authorization: `Bearer ${activeToken}` } }),
+                axios.get(`${API_BASE}/ledger`, { headers: { Authorization: `Bearer ${activeToken}` } })
             ]);
             setUser(meRes.data.data);
             setLedger(ledgerRes.data.data);
@@ -95,9 +97,15 @@ export const PersonalWallet: React.FC = () => {
 
     const initializeWallet = async () => {
         try {
-            await axios.post(`${API_BASE}/register`, {
-                name: merchant?.name, email: merchant?.email, password: 'password123'
+            const res = await axios.post(`${API_BASE}/register`, {
+                name: merchant?.name,
+                email: merchant?.email?.toLowerCase(),
+                password: 'password123'
             });
+            if (res.data?.data?.token) {
+                localStorage.setItem('zw_wallet_token', res.data.data.token);
+                setWalletToken(res.data.data.token);
+            }
             fetchWalletData();
         } catch (error: any) {
             // If user already exists, just try fetching data again
@@ -112,11 +120,12 @@ export const PersonalWallet: React.FC = () => {
     const handleTransfer = async (e: React.FormEvent) => {
         e.preventDefault();
         setTransferStatus('sending');
+        const activeToken = walletToken || token;
         try {
             await axios.post(`${API_BASE}/transfer`, {
                 toUpiId: transferForm.toUpiId,
                 amountPaise: Math.round(parseFloat(transferForm.amount) * 100)
-            }, { headers: { Authorization: `Bearer ${token}` } });
+            }, { headers: { Authorization: `Bearer ${activeToken}` } });
 
             setTransferStatus('success');
             setTimeout(() => {
@@ -131,10 +140,11 @@ export const PersonalWallet: React.FC = () => {
     const handleTopUp = async (e: React.FormEvent) => {
         e.preventDefault();
         setTopUpStatus('loading');
+        const activeToken = walletToken || token;
         try {
             await axios.post(`${API_BASE}/top-up`, {
                 amountPaise: Math.round(parseFloat(topUpAmount) * 100),
-            }, { headers: { Authorization: `Bearer ${token}` } });
+            }, { headers: { Authorization: `Bearer ${activeToken}` } });
             setTopUpStatus('success');
             setTimeout(() => {
                 setIsTopUpModalOpen(false);
@@ -153,8 +163,9 @@ export const PersonalWallet: React.FC = () => {
         try {
             const isPin = /^\d{6}$/.test(credential);
             const payload = isPin ? { pin: credential } : { password: credential };
+            const activeToken = walletToken || token;
             const { data } = await axios.post(`${API_BASE}/reveal-card`, payload, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${activeToken}` }
             });
             if (data.status === 'success') {
                 setRevealedCard({ cardNumber: data.data.cardNumber, cvv: data.data.cvv });

@@ -15,8 +15,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'zen_jwt_secret_9921';
  */
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password } = req.body;
-        if (!email || !password) return res.status(400).json({ status: 'error', error: 'Email and password are required' });
+        const { name, email: rawEmail, password } = req.body;
+        if (!rawEmail || !password) return res.status(400).json({ status: 'error', error: 'Email and password are required' });
+        const email = rawEmail.toLowerCase();
 
         const existing = await prisma.user.findUnique({ where: { email } });
         if (existing) return res.status(400).json({ status: 'error', error: 'User already exists' });
@@ -70,10 +71,13 @@ router.post('/register', async (req, res) => {
             }
         });
 
+        const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '30d' });
+
         return res.status(201).json({
             status: 'success',
             message: 'Consumer account created',
             data: {
+                token,
                 user: { id: user.id, email: user.email, upiId: user.upiId },
                 card: { ...user.cards[0], cvv } // Show CVV only once at registration
             }
@@ -88,7 +92,8 @@ router.post('/register', async (req, res) => {
  * POST /v1/consumer/login
  */
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+    const { email: rawEmail, password } = req.body;
+    const email = rawEmail?.toLowerCase();
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return res.status(401).json({ status: 'error', error: 'Invalid email or password' });
 

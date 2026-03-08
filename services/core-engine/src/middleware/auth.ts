@@ -25,15 +25,34 @@ export const authenticateUser = async (req: AuthRequest, res: Response, next: Ne
         const decoded = jwt.verify(token, JWT_SECRET) as any;
         req.email = decoded.email;
 
-        // If it's a direct User token
+        // 1. Direct User Token
         if (decoded.userId) {
             req.userId = decoded.userId;
         }
-        // If it's a Merchant token, try to find the linked Consumer User
+        // 2. Merchant Token - Fallback to linked User
         else if (decoded.merchantId) {
-            const user = await prisma.user.findUnique({ where: { email: decoded.email } });
+            req.merchantId = decoded.merchantId;
+            // Case-insensitive search: find by email exactly as in token, then try lowercase
+            let user = await prisma.user.findUnique({ where: { email: decoded.email } });
+            if (!user) {
+                user = await prisma.user.findUnique({ where: { email: decoded.email.toLowerCase() } });
+            }
+
             if (user) {
                 req.userId = user.id;
+            } else {
+                // Last ditch effort: if we have a valid merchant but no user, 
+                // we'll try one more time to find them to avoid 401s in Personal Wallet.
+                // In a production env, we'd log this mismatch.
+                const merchant = await prisma.merchant.findUnique({ where: { id: decoded.merchantId } });
+                if (merchant) {
+                    const linkedUser = await prisma.user.findFirst({
+                        where: { email: { equals: merchant.email, mode: 'insensitive' } }
+                    });
+                    if (linkedUser) {
+                        req.userId = linkedUser.id;
+                    }
+                }
             }
         }
 
