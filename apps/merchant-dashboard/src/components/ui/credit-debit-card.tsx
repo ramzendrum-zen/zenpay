@@ -237,8 +237,11 @@ const FlippableCreditCard = React.forwardRef<HTMLDivElement, FlippableCreditCard
                     className={cn("group h-56 w-full max-w-[360px] cursor-pointer", className)}
                     style={{ perspective: "1000px" }}
                     ref={ref}
-                    onClick={handleCardClick}
                     {...props}
+                    onClick={(e) => {
+                        handleCardClick();
+                        props.onClick?.(e);
+                    }}
                 >
                     <div
                         className="relative h-full w-full rounded-2xl shadow-xl transition-transform duration-700"

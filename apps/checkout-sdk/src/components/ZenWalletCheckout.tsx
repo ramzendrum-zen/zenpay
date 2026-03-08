@@ -203,7 +203,7 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
         await capturePayment(upiInfo!.userId, undefined, 'upi');
     };
 
-    const total = order ? order.amountPaise : 0;
+    const total = order ? (order.amount || order.amountPaise || 0) : 0;
 
     const renderValidationIcon = (state: ValidationState) => {
         if (state === 'validating') return <Loader2 size={16} className="animate-spin text-zinc-500" />;
@@ -217,25 +217,25 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
             {/* Dark Backdrop */}
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => onClose?.()} />
 
-            {/* Modal Container - Premium Monochrome Luxury styling with FIXED size */}
-            <div className="relative w-full max-w-[850px] h-[600px] bg-zinc-950 rounded-2xl border border-white/10 shadow-[0_30px_100px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
+            {/* Modal Container - Premium White Luxury styling with FIXED size */}
+            <div className="relative w-full max-w-[850px] h-[600px] bg-white rounded-2xl border border-slate-200 shadow-[0_30px_100px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
 
                 {/* Top Header */}
-                <header className="px-8 h-16 flex items-center justify-between flex-shrink-0 border-b border-white/5">
+                <header className="px-8 h-16 flex items-center justify-between flex-shrink-0 border-b border-slate-100">
                     <div className="flex items-center gap-3">
-                        <div className="size-8 bg-white rounded flex items-center justify-center">
-                            <Wallet size={16} className="text-black" />
+                        <div className="size-8 bg-slate-900 rounded flex items-center justify-center">
+                            <Wallet size={16} className="text-white" />
                         </div>
-                        <span className="font-bold text-white text-lg tracking-tight">ZenPay</span>
+                        <span className="font-bold text-slate-900 text-lg tracking-tight">ZenPay</span>
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 text-[10px] font-black text-zinc-400 uppercase tracking-widest px-3 py-1 bg-white/5 rounded-full border border-white/5">
-                            <Lock size={10} className="text-zinc-400" />
+                        <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 py-1 bg-slate-50 rounded-full border border-slate-100">
+                            <Lock size={10} className="text-slate-400" />
                             Encrypted
                         </div>
                         <button
                             onClick={() => onClose?.()}
-                            className="p-2 hover:bg-white/10 rounded-full transition-colors text-zinc-500 hover:text-white"
+                            className="p-2 hover:bg-slate-50 rounded-full transition-colors text-slate-400 hover:text-slate-900"
                         >
                             <XCircle size={24} strokeWidth={1.5} />
                         </button>
@@ -244,28 +244,28 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
 
                 {/* Main Body */}
                 <div className="flex-1 flex overflow-hidden">
-                    {/* Left Sidebar - Black backdrop */}
-                    <div className="w-[300px] h-full bg-black/40 border-r border-white/5 p-8 flex flex-col justify-between">
+                    {/* Left Sidebar - Light Grey backdrop */}
+                    <div className="w-[300px] h-full bg-slate-50 border-r border-slate-100 p-8 flex flex-col justify-between">
                         <div className="space-y-6">
                             <div>
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">You are paying</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">You are paying</p>
                                 <div className="flex items-center gap-4 mb-6">
-                                    <div className="size-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-white">
+                                    <div className="size-12 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-900 shadow-sm">
                                         <ShoppingBag size={20} className="opacity-80" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h3 className="font-bold text-white text-sm truncate">{order?.merchant?.businessName || 'Business Entity'}</h3>
-                                        <p className="text-[10px] text-zinc-500 font-medium tracking-wide">Verified Merchant</p>
+                                        <h3 className="font-bold text-slate-900 text-sm truncate">{order?.merchant?.businessName || 'Business Entity'}</h3>
+                                        <p className="text-[10px] text-slate-500 font-medium tracking-wide">Verified Merchant</p>
                                     </div>
                                 </div>
-                                <div className="text-3xl font-black text-white mb-2 tracking-tight">
+                                <div className="text-3xl font-black text-slate-900 mb-2 tracking-tight">
                                     {order ? formatCurrency(total) : '---'}
                                 </div>
-                                <p className="text-[10px] text-zinc-500 font-medium font-mono uppercase tracking-widest bg-white/5 px-2 py-1 inline-block rounded border border-white/5">ID: {orderId ? orderId.slice(-8) : '----'}</p>
+                                <p className="text-[10px] text-slate-400 font-medium font-mono uppercase tracking-widest bg-white px-2 py-1 inline-block rounded border border-slate-200 shadow-sm">ID: {orderId ? orderId.slice(-8) : '----'}</p>
                             </div>
 
-                            <div className="space-y-3 pt-6 border-t border-white/5">
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Payment Method</p>
+                            <div className="space-y-3 pt-6 border-t border-slate-200">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Payment Method</p>
                                 {[
                                     { id: 'card' as Method, label: 'Debit Card', icon: CreditCard },
                                     { id: 'upi' as Method, label: 'Direct UPI', icon: QrCode },
@@ -274,12 +274,12 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                         key={item.id}
                                         onClick={() => handleMethodSelect(item.id)}
                                         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs transition-all border ${selectedMethod === item.id
-                                            ? 'bg-white text-black border-white font-bold'
-                                            : 'bg-transparent border-transparent text-zinc-400 hover:bg-white/5 hover:text-zinc-200 font-medium'
+                                            ? 'bg-slate-900 text-white border-slate-900 font-bold shadow-lg shadow-slate-900/10'
+                                            : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700 font-medium shadow-sm'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <item.icon size={16} className={selectedMethod === item.id ? 'text-black' : 'text-zinc-500'} strokeWidth={selectedMethod === item.id ? 2.5 : 2} />
+                                            <item.icon size={16} className={selectedMethod === item.id ? 'text-white' : 'text-slate-400'} strokeWidth={selectedMethod === item.id ? 2.5 : 2} />
                                             {item.label}
                                         </div>
                                     </button>
@@ -287,7 +287,7 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-center gap-2 text-[10px] text-zinc-600 font-medium tracking-wide">
+                        <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 font-medium tracking-wide">
                             <ShieldCheck size={12} className="opacity-70" />
                             <span>Powered by ZenWallet</span>
                         </div>
@@ -310,8 +310,8 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                 {step === 'SELECT_METHOD' && (
                                     <div className="animate-in fade-in duration-300">
                                         <div className="mb-8">
-                                            <h2 className="text-2xl font-bold text-white tracking-tight">Select Method</h2>
-                                            <p className="text-sm text-zinc-400 mt-2">Choose how you'd like to complete this payment.</p>
+                                            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Select Method</h2>
+                                            <p className="text-sm text-slate-500 mt-2">Choose how you'd like to complete this payment.</p>
                                         </div>
                                         <div className="space-y-3">
                                             {[
@@ -321,18 +321,18 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                                 <button
                                                     key={m.id}
                                                     onClick={() => handleMethodSelect(m.id)}
-                                                    className="w-full flex items-center justify-between p-4 rounded-xl border border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all group"
+                                                    className="w-full flex items-center justify-between p-4 rounded-2xl border border-slate-200 hover:border-slate-900 hover:bg-slate-50 transition-all group shadow-sm bg-white"
                                                 >
                                                     <div className="flex gap-4 items-center">
-                                                        <div className="size-10 bg-white/5 border border-white/5 rounded flex items-center justify-center">
-                                                            <m.icon size={20} className="text-zinc-300" strokeWidth={1.5} />
+                                                        <div className="size-10 bg-slate-50 border border-slate-100 rounded flex items-center justify-center">
+                                                            <m.icon size={20} className="text-slate-600" strokeWidth={1.5} />
                                                         </div>
                                                         <div className="text-left">
-                                                            <p className="text-sm font-semibold text-white">{m.label}</p>
-                                                            <p className="text-xs text-zinc-500 mt-0.5">{m.sub}</p>
+                                                            <p className="text-sm font-semibold text-slate-900">{m.label}</p>
+                                                            <p className="text-xs text-slate-500 mt-0.5">{m.sub}</p>
                                                         </div>
                                                     </div>
-                                                    <ArrowRight size={16} className="text-zinc-600 group-hover:text-white transition-colors" />
+                                                    <ArrowRight size={16} className="text-slate-300 group-hover:text-slate-900 transition-colors" />
                                                 </button>
                                             ))}
                                         </div>
@@ -343,12 +343,12 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                 {step === 'CARD_FORM' && (
                                     <div className="animate-in fade-in duration-300">
                                         <div className="mb-8">
-                                            <h2 className="text-2xl font-bold text-white tracking-tight">Debit Card</h2>
-                                            <p className="text-sm text-zinc-400 mt-2 opacity-80">Enter your ZenWallet card details.</p>
+                                            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Debit Card</h2>
+                                            <p className="text-sm text-slate-500 mt-2 opacity-80">Enter your ZenWallet card details.</p>
                                         </div>
                                         <form onSubmit={handleCardPay} className="space-y-5">
                                             <div>
-                                                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Card Number</label>
+                                                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Card Number</label>
                                                 <div className="relative">
                                                     <input
                                                         type="text"
@@ -357,17 +357,19 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                                         value={cardNumber}
                                                         onChange={e => handleCardNumberChange(e.target.value)}
                                                         maxLength={19}
-                                                        className={`w-full h-12 bg-black border rounded-lg px-4 pr-12 text-sm text-white font-mono outline-none transition-all tracking-widest placeholder:text-zinc-800 ${cardValidation === 'valid' ? 'border-white focus:border-white' :
+                                                        className={`w-full h-12 bg-white border rounded-xl px-4 pr-12 text-sm text-slate-900 font-mono outline-none transition-all tracking-widest placeholder:text-slate-200 ${cardValidation === 'valid' ? 'border-slate-900 focus:ring-4 focus:ring-slate-900/5' :
                                                             cardValidation === 'invalid' ? 'border-red-500 focus:border-red-500' :
-                                                                'border-white/20 focus:border-white/60'
+                                                                'border-slate-200 focus:border-slate-400'
                                                             }`}
                                                     />
                                                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                                        {renderValidationIcon(cardValidation)}
+                                                        {cardValidation === 'validating' ? <Loader2 size={16} className="animate-spin text-slate-400" /> :
+                                                            cardValidation === 'valid' ? <div className="size-5 bg-slate-900 rounded-full flex items-center justify-center"><CheckCheck size={12} className="text-white" /></div> :
+                                                                cardValidation === 'invalid' ? <AlertCircle size={16} className="text-red-500" /> : null}
                                                     </div>
                                                 </div>
                                                 {cardValidation === 'valid' && cardInfo && (
-                                                    <p className="mt-2 text-xs text-zinc-400">Cardholder: <span className="text-white font-medium">{cardInfo.holderName}</span></p>
+                                                    <p className="mt-2 text-xs text-slate-500">Cardholder: <span className="text-slate-900 font-bold">{cardInfo.holderName}</span></p>
                                                 )}
                                                 {cardError && <p className="mt-1.5 text-xs text-red-500">{cardError}</p>}
                                             </div>
@@ -375,7 +377,7 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                             {cardValidation === 'valid' && (
                                                 <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-300">
                                                     <div>
-                                                        <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Expiry (MM/YY)</label>
+                                                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Expiry (MM/YY)</label>
                                                         <input
                                                             required
                                                             type="text"
@@ -384,11 +386,11 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                                             value={expiry}
                                                             onChange={e => setExpiry(formatExpiry(e.target.value))}
                                                             maxLength={5}
-                                                            className="w-full h-12 bg-black border border-white/20 rounded-lg px-4 text-sm text-white font-mono outline-none focus:border-white/60 transition-all placeholder:text-zinc-800"
+                                                            className="w-full h-12 bg-white border border-slate-200 rounded-xl px-4 text-sm text-slate-900 font-mono outline-none focus:border-slate-400 transition-all placeholder:text-slate-200"
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">CVV</label>
+                                                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">CVV</label>
                                                         <div className="relative">
                                                             <input
                                                                 required
@@ -397,9 +399,9 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                                                 value={cvv}
                                                                 onChange={e => setCvv(e.target.value.replace(/\D/g, '').slice(0, 3))}
                                                                 maxLength={3}
-                                                                className="w-full h-12 bg-black border border-white/20 rounded-lg px-4 text-sm text-white font-mono outline-none focus:border-white/60 transition-all placeholder:text-zinc-800 tracking-[0.3em]"
+                                                                className="w-full h-12 bg-white border border-slate-200 rounded-xl px-4 text-sm text-slate-900 font-mono outline-none focus:border-slate-400 transition-all placeholder:text-slate-200 tracking-[0.3em]"
                                                             />
-                                                            <button type="button" onClick={() => setShowCvv(!showCvv)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-white">
+                                                            <button type="button" onClick={() => setShowCvv(!showCvv)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-900">
                                                                 {showCvv ? <EyeOff size={16} /> : <Eye size={16} />}
                                                             </button>
                                                         </div>
@@ -410,7 +412,7 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                             <button
                                                 type="submit"
                                                 disabled={submitting || cardValidation !== 'valid'}
-                                                className="w-full h-12 mt-6 bg-white hover:bg-zinc-200 text-black font-bold uppercase tracking-widest text-[11px] rounded-lg transition-all active:scale-[0.99] disabled:opacity-30 disabled:hover:bg-white"
+                                                className="w-full h-14 mt-6 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-[0.2em] text-[11px] rounded-xl transition-all active:scale-[0.98] disabled:opacity-30 shadow-xl shadow-slate-900/10"
                                             >
                                                 Pay {formatCurrency(total)}
                                             </button>
@@ -422,11 +424,11 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                 {step === 'UPI_FORM' && (
                                     <div className="animate-in fade-in duration-300 flex flex-col h-full">
                                         <div className="mb-6">
-                                            <h2 className="text-2xl font-bold text-white tracking-tight">Direct UPI</h2>
-                                            <p className="text-sm text-zinc-400 mt-2">Enter credentials or scan to pay securely.</p>
+                                            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Direct UPI</h2>
+                                            <p className="text-sm text-slate-500 mt-2">Enter credentials or scan to pay securely.</p>
                                         </div>
 
-                                        <div className="flex p-1 bg-white/5 border border-white/10 rounded-lg mb-8">
+                                        <div className="flex p-1 bg-slate-50 border border-slate-100 rounded-xl mb-8">
                                             {[
                                                 { id: 'id' as const, label: 'UPI ID' },
                                                 { id: 'qr' as const, label: 'QR Code' },
@@ -434,7 +436,7 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                                 <button
                                                     key={tab.id}
                                                     onClick={() => setUpiTab(tab.id)}
-                                                    className={`flex-1 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${upiTab === tab.id ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'
+                                                    className={`flex-1 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${upiTab === tab.id ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
                                                         }`}
                                                 >
                                                     {tab.label}
@@ -445,21 +447,21 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                         {upiTab === 'id' && (
                                             <form onSubmit={handleUpiPay} className="space-y-6 flex-1">
                                                 <div>
-                                                    <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">ZenPay UPI ID</label>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">ZenPay UPI ID</label>
                                                     <div className="relative">
                                                         <input
                                                             type="text"
                                                             placeholder="number@zenpay"
                                                             value={upiId}
                                                             onChange={e => handleUpiChange(e.target.value)}
-                                                            className={`w-full h-12 bg-black border rounded-lg px-4 pr-24 text-sm text-white outline-none transition-all placeholder:text-zinc-800 ${upiValidation === 'valid' ? 'border-white focus:border-white' :
+                                                            className={`w-full h-12 bg-white border rounded-xl px-4 pr-24 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-200 ${upiValidation === 'valid' ? 'border-slate-900 focus:ring-4 focus:ring-slate-900/5' :
                                                                 upiValidation === 'invalid' ? 'border-red-500 focus:border-red-500' :
-                                                                    'border-white/20 focus:border-white/60'
+                                                                    'border-slate-200 focus:border-slate-400'
                                                                 }`}
                                                         />
                                                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                                            {upiValidation === 'validating' && <Loader2 size={14} className="animate-spin text-zinc-500" />}
-                                                            {upiValidation === 'valid' && <span className="text-[9px] font-bold text-black bg-white px-2 py-1 rounded">VERIFIED</span>}
+                                                            {upiValidation === 'validating' && <Loader2 size={14} className="animate-spin text-slate-400" />}
+                                                            {upiValidation === 'valid' && <span className="text-[9px] font-bold text-white bg-slate-900 px-2 py-1 rounded">VERIFIED</span>}
                                                             {upiValidation === 'invalid' && <AlertCircle size={14} className="text-red-500" />}
                                                         </div>
                                                     </div>
@@ -472,7 +474,7 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                                 <button
                                                     type="submit"
                                                     disabled={submitting || upiValidation !== 'valid'}
-                                                    className="w-full h-12 bg-white hover:bg-zinc-200 text-black font-bold uppercase tracking-widest text-[11px] rounded-lg transition-all active:scale-[0.99] disabled:opacity-30 disabled:hover:bg-white"
+                                                    className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-[0.2em] text-[11px] rounded-xl transition-all active:scale-[0.98] disabled:opacity-30 shadow-xl shadow-slate-900/10"
                                                 >
                                                     Proceed
                                                 </button>
@@ -502,15 +504,15 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                 {/* ── UPI PIN ── */}
                                 {step === 'UPI_PIN' && (
                                     <div className="animate-in fade-in zoom-in-95 duration-300 relative">
-                                        <button onClick={() => setStep('UPI_FORM')} className="absolute -top-2 left-0 p-2 text-zinc-500 hover:text-white transition-colors">
+                                        <button onClick={() => setStep('UPI_FORM')} className="absolute -top-2 left-0 p-2 text-slate-400 hover:text-slate-900 transition-colors">
                                             <ArrowLeft size={20} />
                                         </button>
                                         <div className="flex flex-col items-center pt-8">
-                                            <div className="size-16 border border-white/10 bg-white/5 rounded-2xl flex items-center justify-center mb-6">
-                                                <Lock size={24} className="text-white" strokeWidth={1.5} />
+                                            <div className="size-16 border border-slate-100 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+                                                <Lock size={24} className="text-slate-900" strokeWidth={1.5} />
                                             </div>
-                                            <h2 className="text-2xl font-bold text-white tracking-tight">Authorization</h2>
-                                            <p className="text-sm text-zinc-400 mt-2 text-center mb-10 max-w-[260px]">
+                                            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Authorization</h2>
+                                            <p className="text-sm text-slate-500 mt-2 text-center mb-10 max-w-[260px]">
                                                 Enter your 6-digit ZenPay PIN to confirm this payment.
                                             </p>
 
@@ -523,16 +525,16 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                                         value={upiPin}
                                                         onChange={e => setUpiPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                                         maxLength={6}
-                                                        className="w-full h-14 bg-black border border-white/20 rounded-xl px-6 text-center text-3xl text-white font-mono tracking-[0.4em] outline-none focus:border-white transition-all placeholder:text-zinc-800"
+                                                        className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 text-center text-3xl text-slate-900 font-mono tracking-[0.4em] outline-none focus:border-slate-900 transition-all placeholder:text-slate-100"
                                                     />
-                                                    <button type="button" onClick={() => setShowUpiPin(!showUpiPin)} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-white transition-colors">
+                                                    <button type="button" onClick={() => setShowUpiPin(!showUpiPin)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-900 transition-colors">
                                                         {showUpiPin ? <EyeOff size={18} /> : <Eye size={18} />}
                                                     </button>
                                                 </div>
                                                 <button
                                                     type="submit"
                                                     disabled={upiPin.length !== 6 || submitting}
-                                                    className="w-full h-12 bg-white hover:bg-zinc-200 text-black font-bold uppercase tracking-widest text-[11px] rounded-lg transition-all active:scale-[0.99] disabled:opacity-30 disabled:hover:bg-white"
+                                                    className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-[0.2em] text-[11px] rounded-xl transition-all active:scale-[0.98] disabled:opacity-30 shadow-xl shadow-slate-900/10"
                                                 >
                                                     Authorize {formatCurrency(total)}
                                                 </button>
@@ -553,12 +555,12 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                 {/* ── SUCCESS ── */}
                                 {step === 'SUCCESS' && (
                                     <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in zoom-in duration-500">
-                                        <div className="size-20 border border-white/20 bg-white/5 rounded-full flex items-center justify-center mb-8 relative">
-                                            <CheckCircle2 size={40} strokeWidth={1.5} className="text-white" />
+                                        <div className="size-20 border border-slate-100 bg-slate-50 rounded-full flex items-center justify-center mb-8 relative shadow-sm">
+                                            <CheckCircle2 size={40} strokeWidth={1.5} className="text-slate-900" />
                                         </div>
-                                        <h2 className="text-2xl font-bold text-white tracking-tight">Approved</h2>
-                                        <p className="text-sm text-zinc-400 mt-2">Transaction completed successfully.</p>
-                                        <button onClick={() => onSuccess({ status: 'success' })} className="mt-10 px-10 h-12 bg-white text-black text-[11px] uppercase tracking-widest font-bold rounded-lg hover:bg-zinc-200 transition-colors">
+                                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Approved</h2>
+                                        <p className="text-sm text-slate-500 mt-2">Transaction completed successfully.</p>
+                                        <button onClick={() => onSuccess({ status: 'success' })} className="mt-10 px-10 h-14 bg-slate-900 text-white text-[11px] uppercase tracking-[0.2em] font-bold rounded-xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10">
                                             Return to Merchant
                                         </button>
                                     </div>
@@ -567,16 +569,16 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                                 {/* ── FAILURE ── */}
                                 {step === 'FAILURE' && (
                                     <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-300">
-                                        <div className="size-20 border border-red-500/20 bg-red-500/10 rounded-full flex items-center justify-center mb-8">
-                                            <XCircle size={40} strokeWidth={1.5} className="text-red-400" />
+                                        <div className="size-20 border border-red-100 bg-red-50 rounded-full flex items-center justify-center mb-8 shadow-sm">
+                                            <XCircle size={40} strokeWidth={1.5} className="text-red-500" />
                                         </div>
-                                        <h2 className="text-2xl font-bold text-white tracking-tight">Declined</h2>
-                                        <p className="text-sm text-zinc-400 mt-2 max-w-[280px]">{error || 'Transaction could not be completed.'}</p>
+                                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Declined</h2>
+                                        <p className="text-sm text-slate-500 mt-2 max-w-[280px]">{error || 'Transaction could not be completed.'}</p>
                                         <div className="mt-10 flex gap-4 w-full">
-                                            <button onClick={() => onClose ? onClose() : onFailure({ status: 'failure', message: error || 'Payment failed' })} className="flex-1 h-12 border border-white/20 text-white text-[11px] uppercase tracking-widest font-bold rounded-lg hover:bg-white/5 transition-colors">
+                                            <button onClick={() => onClose ? onClose() : onFailure({ status: 'failure', message: error || 'Payment failed' })} className="flex-1 h-12 border border-slate-200 text-slate-400 text-[11px] uppercase tracking-widest font-bold rounded-xl hover:bg-slate-50 transition-colors">
                                                 Cancel
                                             </button>
-                                            <button onClick={() => { setError(null); setStep('SELECT_METHOD'); }} className="flex-1 h-12 bg-white text-black text-[11px] uppercase tracking-widest font-bold rounded-lg hover:bg-zinc-200 transition-colors">
+                                            <button onClick={() => { setError(null); setStep('SELECT_METHOD'); }} className="flex-1 h-12 bg-slate-900 text-white text-[11px] uppercase tracking-widest font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10">
                                                 Retry
                                             </button>
                                         </div>
@@ -588,9 +590,9 @@ export const ZenWalletCheckout: React.FC<CheckoutProps> = ({ orderId, publicKey,
                 </div>
 
                 {/* Footer */}
-                <footer className="h-12 border-t border-white/5 bg-black/20 flex justify-between items-center px-8 text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em] flex-shrink-0">
+                <footer className="h-12 border-t border-slate-100 bg-slate-50 flex justify-between items-center px-8 text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] flex-shrink-0">
                     <div className="flex items-center gap-2">
-                        <div className="size-1.5 bg-zinc-500 rounded-full" />
+                        <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse" />
                         Network Operational
                     </div>
                     <div className="flex gap-6">

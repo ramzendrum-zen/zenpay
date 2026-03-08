@@ -1,7 +1,8 @@
-import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
+import { ScannerModal } from '../ui/ScannerModal';
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -11,6 +12,7 @@ const NAV_ITEMS = [
     { name: 'Dashboard', icon: 'dashboard', path: '/' },
     { name: 'Transactions', icon: 'receipt_long', path: '/transactions' },
     { name: 'Settlements', icon: 'account_balance_wallet', path: '/settlements' },
+    { name: 'Scan & Pay', icon: 'qr_code_scanner', path: '/personal' },
     { name: 'Refunds', icon: 'undo', path: '/refunds' },
     { name: 'Personal Wallet', icon: 'wallet', path: '/personal' },
     { name: 'API Integration', icon: 'integration_instructions', path: '/api-integration' },
@@ -19,9 +21,10 @@ const NAV_ITEMS = [
 ];
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-    const location = useLocation();
     const navigate = useNavigate();
+    const location = useLocation();
     const { merchant, logout } = useAuth();
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -43,9 +46,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
                 <nav className="flex-1 flex flex-col items-center py-4 gap-2 overflow-y-auto no-scrollbar">
                     {NAV_ITEMS.map(item => (
-                        <Link
+                        <button
                             key={item.path}
-                            to={item.path}
+                            onClick={() => {
+                                if (item.name === 'Scan & Pay') {
+                                    setIsScannerOpen(true);
+                                } else {
+                                    navigate(item.path);
+                                }
+                            }}
                             className="relative group flex items-center justify-center p-2.5 rounded-xl transition-all duration-300"
                             title={item.name}
                         >
@@ -59,7 +68,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                             <span className={`material-symbols-outlined text-[20px] relative z-10 transition-colors duration-200 ${isActive(item.path) ? 'text-blue-600' : 'text-slate-300 group-hover:text-slate-500'}`}>
                                 {item.icon}
                             </span>
-                        </Link>
+                        </button>
                     ))}
                 </nav>
 
@@ -74,7 +83,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
             <main className="flex-1 flex flex-col min-h-screen ml-[72px]">
                 {/* ── Fixed Header Component (Non-overlapping) ── */}
                 <header className="sticky top-0 z-40 bg-[#F8FAFC]/80 backdrop-blur-md px-10 h-16 flex items-center justify-between">
-                    {/* Placeholder for page title alignment - titles are rendered inside children */}
                     <div className="flex-1" />
 
                     {/* Utilities Bar */}
@@ -91,7 +99,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                             <span className="material-symbols-outlined text-lg">notifications</span>
                         </button>
                         <div className="size-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-[10px] shadow-sm">
-                            {merchant?.name?.charAt(0)?.toUpperCase()}
+                            {merchant?.businessName?.charAt(0)?.toUpperCase() || 'M'}
                         </div>
                     </div>
                 </header>
@@ -103,15 +111,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                         animate={{ opacity: 1, y: 0 }}
                         className="w-full relative"
                     >
-                        {/* 
-                           Note: Page headers like "API & Infrastructure" are inside the children.
-                           Due to the flex-col and 16h header above, they will naturally start 
-                           where they are intended without overlapping the search bar.
-                        */}
                         {children}
                     </motion.div>
                 </div>
             </main>
+
+            {/* Global Scanner Modal */}
+            <ScannerModal isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} />
         </div>
     );
 };
