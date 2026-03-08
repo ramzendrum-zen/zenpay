@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, animate } from 'framer-motion';
 import axios from 'axios';
 import { io } from 'socket.io-client';
@@ -49,8 +50,8 @@ const AnimatedCounter = ({ value }: { value: number }) => {
         </span>
     );
 };
-
 export const PersonalWallet: React.FC = () => {
+    const location = useLocation();
     const { token, merchant } = useAuth();
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
@@ -60,6 +61,10 @@ export const PersonalWallet: React.FC = () => {
     const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
     const [transferStatus, setTransferStatus] = useState<'idle' | 'sending' | 'success'>('idle');
     const [topUpStatus, setTopUpStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+
+    const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+    const [pinValue, setPinValue] = useState('');
+    const [pinStatus, setPinStatus] = useState<'idle' | 'loading' | 'success'>('idle');
     const [transferForm, setTransferForm] = useState({ toUpiId: '', amount: '', note: '' });
     const [topUpAmount, setTopUpAmount] = useState('');
     const [isScanModalOpen, setIsScanModalOpen] = useState(false);
@@ -83,7 +88,7 @@ export const PersonalWallet: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        const searchParams = new URLSearchParams(window.location.search);
+        const searchParams = new URLSearchParams(location.search);
         const payTarget = searchParams.get('pay');
         const payAmount = searchParams.get('am');
         const payNote = searchParams.get('tn');
@@ -96,9 +101,9 @@ export const PersonalWallet: React.FC = () => {
             });
             setIsTransferModalOpen(true);
             // Clean URL
-            window.history.replaceState({}, '', window.location.pathname);
+            window.history.replaceState({}, '', location.pathname);
         }
-    }, [window.location.search]);
+    }, [location.search, location.pathname]);
 
     useEffect(() => {
         if (!user?.user?.id) return;
@@ -175,25 +180,52 @@ export const PersonalWallet: React.FC = () => {
         }
     };
 
-    const handleTransfer = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleTransfer = async (e?: React.FormEvent, pin?: string) => {
+        if (e) e.preventDefault();
+
+        // If user has PIN but it wasn't provided yet
+        if (user?.user?.hasTransactionPin && !pin) {
+            setIsPinModalOpen(true);
+            return;
+        }
+
         setTransferStatus('sending');
+        if (pin) setPinStatus('loading');
+
         const activeToken = walletToken || token;
         try {
             await axios.post(`${API_BASE}/transfer`, {
                 toUpiId: transferForm.toUpiId,
                 amountPaise: Math.round(parseFloat(transferForm.amount) * 100),
-                note: transferForm.note
+                note: transferForm.note,
+                pin
             }, { headers: { Authorization: `Bearer ${activeToken}` } });
 
             setTransferStatus('success');
+            if (pin) setPinStatus('success');
+
             setTimeout(() => {
                 setIsTransferModalOpen(false);
+                setIsPinModalOpen(false);
                 setTransferStatus('idle');
+                setPinStatus('idle');
                 setTransferForm({ toUpiId: '', amount: '', note: '' });
+                setPinValue('');
                 fetchWalletData();
             }, 800);
-        } catch { setTransferStatus('idle'); toast.error('Check funds'); }
+        } catch (err: any) {
+            setTransferStatus('idle');
+            setPinStatus('idle');
+            const msg = err.response?.data?.error || 'Check funds or PIN';
+            toast.error(msg);
+        }
+    };
+
+    const onVerifyPin = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (pinValue.length === 6) {
+            handleTransfer(undefined, pinValue);
+        }
     };
 
     const handleTopUp = async (e: React.FormEvent) => {
@@ -660,6 +692,47 @@ export const PersonalWallet: React.FC = () => {
                                         className="w-full h-14 bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl active:scale-95 transition-all disabled:opacity-50"
                                     >
                                         {setupPinStatus === 'loading' ? 'Encrypting...' : setupPinStatus === 'success' ? 'PIN Active' : 'Enable Security'}
+                                    </button>
+                                </form>
+                            </motion.div>
+                        </div>
+                    )
+                }
+                {/* Verify PIN Modal for Payments */}
+                {
+                    isPinModalOpen && (
+                        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/40 backdrop-blur-[4px]" onClick={() => setIsPinModalOpen(false)} />
+                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white w-full max-w-[320px] rounded-[3rem] p-8 shadow-2xl border border-slate-100 text-center flex flex-col items-center">
+                                <div className="flex flex-col items-center gap-4 mb-8">
+                                    <div className="size-16 bg-blue-600 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-blue-600/20">
+                                        <ShieldCheck size={32} />
+                                    </div>
+                                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest leading-tight">Authorize Payment</h3>
+                                    <p className="text-[10px] text-slate-500 font-medium px-4">Enter your 6-digit transaction PIN to complete this payment.</p>
+                                </div>
+
+                                <form onSubmit={onVerifyPin} className="w-full space-y-8">
+                                    <div className="relative">
+                                        <input
+                                            autoFocus
+                                            required
+                                            type="password"
+                                            maxLength={6}
+                                            placeholder="••••••"
+                                            value={pinValue}
+                                            autoComplete="off"
+                                            onChange={e => setPinValue(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                            className="w-full h-16 bg-slate-50 border border-slate-100 rounded-3xl px-4 text-center text-4xl font-mono tracking-[0.5em] text-slate-900 focus:bg-white focus:border-blue-500/20 transition-all outline-none placeholder:tracking-normal [&::-ms-reveal]:hidden [&::-webkit-reveal]:hidden"
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={pinValue.length !== 6 || pinStatus === 'loading'}
+                                        className="w-full h-16 bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl active:scale-95 transition-all disabled:opacity-50"
+                                    >
+                                        {pinStatus === 'loading' ? 'Verifying...' : pinStatus === 'success' ? 'Authorized' : 'Confirm Payment'}
                                     </button>
                                 </form>
                             </motion.div>

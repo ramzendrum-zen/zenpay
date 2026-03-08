@@ -218,11 +218,19 @@ router.post('/setup-pin', authenticateUser, async (req: AuthRequest, res) => {
  * DB Transaction based transfer
  */
 router.post('/transfer', authenticateUser, async (req: AuthRequest, res) => {
-    const { toUpiId, amountPaise, note } = req.body;
+    const { toUpiId, amountPaise, note, pin } = req.body;
     if (!toUpiId || !amountPaise) return res.status(400).json({ status: 'error', error: 'Missing transfer details' });
 
     try {
         const result = await prisma.$transaction(async (tx) => {
+            // 0. Verify PIN if sender has one
+            const user = await tx.user.findUnique({ where: { id: req.userId } });
+            if (user?.transactionPinHash) {
+                if (!pin) throw new Error('Transaction PIN required');
+                const isPinMatch = await bcrypt.compare(pin, user.transactionPinHash);
+                if (!isPinMatch) throw new Error('Invalid Transaction PIN');
+            }
+
             // 1. Get sender balance
             const senderLedger = await tx.ledgerEntries.findFirst({
                 where: { userId: req.userId },
