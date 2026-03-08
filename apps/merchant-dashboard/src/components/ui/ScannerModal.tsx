@@ -38,7 +38,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose, onR
                                 onClose();
                             }
                         },
-                        (errorMessage) => {
+                        () => {
                             // ignore decode errors
                         }
                     ).catch(err => {
