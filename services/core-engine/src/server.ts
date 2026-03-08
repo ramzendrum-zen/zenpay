@@ -2,6 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import rateLimit from 'express-rate-limit';
 import { initSocket } from './lib/socket';
 import orderRoutes from './routes/orders';
@@ -59,10 +63,10 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(globalLimiter);
-app.use(express.static('public', {
-  setHeaders: (res, path) => {
+app.use(express.static(path.join(__dirname, '../public'), {
+  setHeaders: (res, staticPath) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    if (path.endsWith('.js')) {
+    if (staticPath.endsWith('.js')) {
       res.setHeader('Content-Type', 'application/javascript');
     }
   }
