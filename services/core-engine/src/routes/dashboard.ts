@@ -146,11 +146,21 @@ router.get('/orders/:id', async (req, res) => {
         if (!order) {
             // Support for development mock orders
             if (req.params.id.startsWith('mock_')) {
+                // Parse amount if specified in mock ID: mock_order_amt_<value>_<ts>
+                let mockAmount = 9900;
+                if (req.params.id.includes('_amt_')) {
+                    const parts = req.params.id.split('_');
+                    const amtIdx = parts.indexOf('amt');
+                    if (amtIdx !== -1 && parts[amtIdx + 1]) {
+                        mockAmount = parseInt(parts[amtIdx + 1]);
+                    }
+                }
+
                 return res.json({
                     status: 'success',
                     data: {
                         id: req.params.id,
-                        amountPaise: 9900, // Default mock amount
+                        amountPaise: mockAmount,
                         currency: 'INR',
                         status: 'PENDING',
                         merchant: {
