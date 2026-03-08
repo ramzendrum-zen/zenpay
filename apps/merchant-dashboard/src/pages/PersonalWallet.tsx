@@ -475,7 +475,7 @@ export const PersonalWallet: React.FC = () => {
                                     <button
                                         onClick={() => {
                                             if (scannedUpiId.includes('@zenpay')) {
-                                                setTransferForm({ toUpiId: scannedUpiId, amount: '' });
+                                                setTransferForm({ toUpiId: scannedUpiId, amount: '', note: '' });
                                                 setIsScanModalOpen(false);
                                                 setIsTransferModalOpen(true);
                                                 setScannedUpiId('');
