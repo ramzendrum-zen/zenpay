@@ -59,6 +59,10 @@ export const PersonalWallet: React.FC = () => {
     const [topUpStatus, setTopUpStatus] = useState<'idle' | 'loading' | 'success'>('idle');
     const [transferForm, setTransferForm] = useState({ toUpiId: '', amount: '' });
     const [topUpAmount, setTopUpAmount] = useState('');
+    const [upiError, setUpiError] = useState('');
+    const [upiTab, setUpiTab] = useState<'id' | 'qr'>('id');
+    const [isScanModalOpen, setIsScanModalOpen] = useState(false);
+    const [scannedUpiId, setScannedUpiId] = useState('');
     const [revealedCard, setRevealedCard] = useState<{ cardNumber: string; cvv: string } | null>(null);
     const wasInitialized = React.useRef(false);
 
@@ -79,7 +83,8 @@ export const PersonalWallet: React.FC = () => {
             setLedger(ledgerRes.data.data);
             setLoading(false);
         } catch (error: any) {
-            if (error.response?.status === 404 && !wasInitialized.current) {
+            // Trigger initialization if user doesn't exist (404) or session is missing (401)
+            if ((error.response?.status === 404 || error.response?.status === 401) && !wasInitialized.current) {
                 wasInitialized.current = true;
                 initializeWallet();
             } else {
@@ -177,9 +182,19 @@ export const PersonalWallet: React.FC = () => {
                             <div className="size-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
                                 <Wallet size={16} />
                             </div>
-                            <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-md">
-                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">{user?.user?.upiId}</span>
-                                <button onClick={() => { navigator.clipboard.writeText(user?.user?.upiId || ''); toast.success('Copied'); }} className="text-slate-200 hover:text-blue-600 transition-colors"><X size={10} /></button>
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg">
+                                <span className="text-[10px] font-bold text-slate-700 uppercase tracking-tight">{user?.user?.upiId || 'Loading...'}</span>
+                                <button
+                                    onClick={() => {
+                                        if (user?.user?.upiId) {
+                                            navigator.clipboard.writeText(user.user.upiId);
+                                            toast.success('UPI ID Copied');
+                                        }
+                                    }}
+                                    className="text-slate-400 hover:text-blue-600 transition-colors"
+                                >
+                                    <QrCode size={12} />
+                                </button>
                             </div>
                         </div>
                         <div className="space-y-0.5">
@@ -213,9 +228,9 @@ export const PersonalWallet: React.FC = () => {
                             <Plus size={14} className="text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
                             <h4 className="text-[10px] font-bold text-slate-900 uppercase">Add Funds</h4>
                         </div>
-                        <div className="bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm hover:border-blue-100 transition-all cursor-pointer group">
+                        <div onClick={() => setIsScanModalOpen(true)} className="bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm hover:border-blue-100 transition-all cursor-pointer group">
                             <QrCode size={14} className="text-emerald-500 mb-2 group-hover:scale-110 transition-transform" />
-                            <h4 className="text-[10px] font-bold text-slate-900 uppercase">My QR</h4>
+                            <h4 className="text-[10px] font-bold text-slate-900 uppercase">Scan & Pay</h4>
                         </div>
                     </div>
 
@@ -295,6 +310,52 @@ export const PersonalWallet: React.FC = () => {
                                     {topUpStatus === 'loading' ? 'Checking...' : 'Initiate'}
                                 </button>
                             </form>
+                        </motion.div>
+                    </div>
+                )}
+                {/* Scan & Pay Modal */}
+                {isScanModalOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/10 backdrop-blur-[2px]" onClick={() => setIsScanModalOpen(false)} />
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white w-full max-w-[320px] rounded-[2rem] p-8 shadow-2xl border border-slate-100 text-center">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest">Scan & Pay</h3>
+                                <button onClick={() => setIsScanModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={16} /></button>
+                            </div>
+
+                            <div className="aspect-square bg-slate-100 rounded-3xl mb-6 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 relative overflow-hidden group">
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <p className="text-white text-[10px] font-bold uppercase tracking-widest">Simulating Scanner...</p>
+                                </div>
+                                <QrCode size={48} className="text-slate-300 mb-2" />
+                                <p className="text-[10px] text-slate-400 font-medium px-6 text-center">In production, this would open the device camera to scan ZenPay QR codes.</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-4">Or Enter UPI ID Manually</p>
+                                <input
+                                    type="text"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-[11px] font-bold text-slate-800 outline-none focus:border-blue-500/20"
+                                    placeholder="e.g. 1234567890@zenpay"
+                                    value={scannedUpiId}
+                                    onChange={(e) => setScannedUpiId(e.target.value)}
+                                />
+                                <button
+                                    onClick={() => {
+                                        if (scannedUpiId.includes('@zenpay')) {
+                                            setTransferForm({ toUpiId: scannedUpiId, amount: '' });
+                                            setIsScanModalOpen(false);
+                                            setIsTransferModalOpen(true);
+                                            setScannedUpiId('');
+                                        } else {
+                                            toast.error('Invalid ZenPay UPI ID');
+                                        }
+                                    }}
+                                    className="w-full h-12 bg-blue-600 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
+                                >
+                                    Proceed to Pay
+                                </button>
+                            </div>
                         </motion.div>
                     </div>
                 )}
