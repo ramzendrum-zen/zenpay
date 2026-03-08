@@ -21,15 +21,14 @@ router.post('/', authenticateMerchant, async (req: AuthRequest, res: Response) =
     }
 
     if (!idempotencyKey) {
-        return res.status(400).json({
-            status: 'error',
-            error: 'Idempotency-Key header is required'
-        });
+        console.warn(`[Orders] Missing Idempotency-Key header for merchant ${merchantId}. Generating fallback...`);
     }
+
+    const effectiveKey = idempotencyKey || `auto_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     try {
         // 1. Check if we already processed this request
-        const cachedResponse = await getIdempotentResponse(idempotencyKey);
+        const cachedResponse = (idempotencyKey) ? await getIdempotentResponse(idempotencyKey) : null;
         if (cachedResponse) {
             return res.json(cachedResponse);
         }
@@ -44,10 +43,10 @@ router.post('/', authenticateMerchant, async (req: AuthRequest, res: Response) =
         const order = await prisma.order.create({
             data: {
                 merchantId: merchantId as string,
-                amountPaise: Math.round(amount * 100),
+                amountPaise: amount,
                 currency,
                 receipt,
-                idempotencyKey,
+                idempotencyKey: effectiveKey,
                 status: OrderStatus.PENDING
             }
         });
@@ -64,13 +63,15 @@ router.post('/', authenticateMerchant, async (req: AuthRequest, res: Response) =
         };
 
         // 4. Save for idempotency
-        await saveIdempotentResponse(idempotencyKey, successResponse);
+        if (idempotencyKey) {
+            await saveIdempotentResponse(idempotencyKey, successResponse);
+        }
 
         return res.json(successResponse);
     } catch (error: any) {
-        if (error.code === 'P2002') { // Unique constraint violation (race condition)
+        if (error.code === 'P2002' && effectiveKey) { // Unique constraint violation (race condition)
             const existingOrder = await prisma.order.findUnique({
-                where: { idempotencyKey }
+                where: { idempotencyKey: effectiveKey }
             });
             if (existingOrder) {
                 return res.json({
