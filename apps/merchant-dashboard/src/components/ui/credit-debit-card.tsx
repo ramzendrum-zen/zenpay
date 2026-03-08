@@ -160,7 +160,7 @@ const FlippableCreditCard = React.forwardRef<HTMLDivElement, FlippableCreditCard
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className="size-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-blue-100/50 transition-colors">
-                                                <Eye size={18} className="text-slate-400 group-hover:text-blue-600" />
+                                                <Lock size={18} className="text-slate-400 group-hover:text-blue-600" />
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-slate-900">Unlock with Password</p>

@@ -31,8 +31,12 @@ router.get('/stats', authenticateMerchant, async (req: AuthRequest, res) => {
         const successRate = totalOrders > 0 ? (paidOrders.length / totalOrders) * 100 : 0;
         const avgTicketPaise = paidOrders.length > 0 ? totalVolumePaise / paidOrders.length : 0;
 
-        // Refund Rate (mocking 0 for now as we don't have many refunds yet)
-        const refundRate = 0.0;
+        // Calculate real refund metrics
+        const capturedPayments = await prisma.payment.findMany({
+            where: { order: { merchantId }, status: 'CAPTURED' }
+        });
+        const totalRefundedPaise = capturedPayments.reduce((acc, p) => acc + (p.refundedPaise || 0), 0);
+        const refundRate = totalVolumePaise > 0 ? (totalRefundedPaise / (totalVolumePaise + totalRefundedPaise)) * 100 : 0;
 
         // 2. Recent Transactions (Latest 5)
         const recentTransactions = orders.slice(0, 5).map(o => ({
@@ -43,8 +47,36 @@ router.get('/stats', authenticateMerchant, async (req: AuthRequest, res) => {
             date: o.createdAt
         }));
 
-        // 3. Trends (Simulated for chart)
-        const trends = [40, 60, 45, 70, 85, 55, 65, 50, 75, 90, 60, 50]; // Still mock but can be made real later
+        // 3. Real Trends Calculation
+        const { timeframe = '24h' } = req.query;
+        let startDate = new Date();
+        let bucketSizeMs = 0;
+
+        if (timeframe === '24h') {
+            startDate.setHours(startDate.getHours() - 24);
+            bucketSizeMs = (24 * 60 * 60 * 1000) / 12;
+        } else if (timeframe === '7d') {
+            startDate.setDate(startDate.getDate() - 7);
+            bucketSizeMs = (7 * 24 * 60 * 60 * 1000) / 12;
+        } else {
+            startDate.setDate(startDate.getDate() - 30);
+            bucketSizeMs = (30 * 24 * 60 * 60 * 1000) / 12;
+        }
+
+        const trendOrders = orders.filter(o => o.createdAt >= startDate && o.status === OrderStatus.PAID);
+        const trends = Array.from({ length: 12 }).map((_, i) => {
+            const bucketStart = new Date(startDate.getTime() + i * bucketSizeMs);
+            const bucketEnd = new Date(startDate.getTime() + (i + 1) * bucketSizeMs);
+            const volume = trendOrders
+                .filter(o => o.createdAt >= bucketStart && o.createdAt < bucketEnd)
+                .reduce((acc, o) => acc + o.amountPaise, 0);
+
+            return {
+                timestamp: bucketEnd,
+                value: volume,
+                displayValue: (volume / 100).toFixed(2)
+            };
+        });
 
         res.json({
             status: 'success',

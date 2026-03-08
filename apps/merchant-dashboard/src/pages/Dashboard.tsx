@@ -20,6 +20,8 @@ export const Dashboard: React.FC = () => {
     const [apiKeys, setApiKeys] = useState<any[]>([]);
     const [selectedKey, setSelectedKey] = useState('all');
     const [showUserMode, setShowUserMode] = useState(false);
+    const [activePoint, setActivePoint] = useState<any>(null);
+    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
         const fetchKeys = async () => {
@@ -39,7 +41,7 @@ export const Dashboard: React.FC = () => {
             try {
                 const endpoint = showUserMode
                     ? `${API_BASE}/me` // Show personal wallet data
-                    : `${API_BASE.replace('/consumer', '')}/dashboard/stats?apiKeyId=${selectedKey}`;
+                    : `${API_BASE.replace('/consumer', '')}/dashboard/stats?apiKeyId=${selectedKey}&timeframe=${timeframe}`;
 
                 const res = await axios.get(endpoint, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -56,7 +58,8 @@ export const Dashboard: React.FC = () => {
                         recentTransactions: user.ledgerEntries?.slice(0, 5).map((l: any) => ({
                             id: l.id,
                             amount: l.amountPaise,
-                            status: 'PAID',
+                            balance: l.balanceAfter,
+                            status: l.type === 'CREDIT' ? 'PAID' : 'DEBIT',
                             date: l.createdAt
                         })) || [],
                         trends: [20, 30, 40, 50, 60, 70, 80, 70, 60, 50, 40, 30] // Mock trend for personal wallet
@@ -71,7 +74,30 @@ export const Dashboard: React.FC = () => {
             }
         };
         fetchStats();
-    }, [token, selectedKey, showUserMode]);
+    }, [token, selectedKey, showUserMode, timeframe]);
+
+    const trends = stats?.trends || [];
+    const maxVal = Math.max(...trends.map((t: any) => t.value), 100);
+    const getPath = (data: any[]) => {
+        if (!data.length) return "";
+        return `M 0 250 ` + data.map((t, i) => {
+            const x = (i / (data.length - 1)) * 1000;
+            const y = 280 - ((t.value / maxVal) * 200 || 0);
+            return `L ${x} ${y}`;
+        }).join(" ");
+    };
+
+    const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+        const svg = e.currentTarget;
+        const rect = svg.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 1000;
+        const index = Math.round((x / 1000) * (trends.length - 1));
+
+        if (index >= 0 && index < trends.length) {
+            setActivePoint(trends[index]);
+            setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+        }
+    };
 
     const displayStats = showUserMode ? [
         { label: 'Available Balance', value: `₹ ${(stats?.totalVolumePaise / 100 || 0).toLocaleString()}`, change: '+0.0%', trend: 'up' },
@@ -172,12 +198,18 @@ export const Dashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Investment-style Line Graph (Simulated with SVG) */}
+                    {/* Investment-style Line Graph */}
                     <div className="flex-1 relative mt-4">
-                        <svg className="w-full h-full overflow-visible" viewBox="0 0 1000 300" preserveAspectRatio="none">
+                        <svg
+                            className="w-full h-full overflow-visible cursor-crosshair"
+                            viewBox="0 0 1000 300"
+                            preserveAspectRatio="none"
+                            onMouseMove={handleMouseMove}
+                            onMouseLeave={() => setActivePoint(null)}
+                        >
                             {/* Received Volume (Green Line) */}
                             <motion.path
-                                d={`M 0 250 ${(stats?.trends || [40, 70, 45, 90, 65, 80, 55, 95, 75, 85, 60, 100]).map((h: number, i: number) => `L ${i * 90} ${280 - (h * 2.5)}`).join(' ')}`}
+                                d={getPath(trends)}
                                 fill="none"
                                 stroke="#10b981"
                                 strokeWidth="3"
@@ -188,38 +220,54 @@ export const Dashboard: React.FC = () => {
                             />
                             {/* Area under green line */}
                             <motion.path
-                                d={`M 0 300 L 0 250 ${(stats?.trends || [40, 70, 45, 90, 65, 80, 55, 95, 75, 85, 60, 100]).map((h: number, i: number) => `L ${i * 90} ${280 - (h * 2.5)}`).join(' ')} L 1000 300 Z`}
-                                fill="url(#greenGradient)"
+                                d={getPath(trends) + ` L 1000 300 L 0 300 Z`}
+                                fill="url(#greenGradient2)"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 0.1 }}
                                 transition={{ delay: 0.5 }}
                             />
 
-                            {/* Paid Volume (Red Line - Simulated offset) */}
-                            <motion.path
-                                d={`M 0 280 ${(stats?.trends || [40, 70, 45, 90, 65, 80, 55, 95, 75, 85, 60, 100]).map((h: number, i: number) => `L ${i * 90} ${295 - (h * 1.5)}`).join(' ')}`}
-                                fill="none"
-                                stroke="#ef4444"
-                                strokeWidth="2"
-                                strokeDasharray="4 4"
-                                opacity="0.6"
-                                initial={{ pathLength: 0 }}
-                                animate={{ pathLength: 1 }}
-                                transition={{ duration: 2, delay: 0.5 }}
-                            />
-
                             <defs>
-                                <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
+                                <linearGradient id="greenGradient2" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stopColor="#10b981" />
                                     <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
                                 </linearGradient>
                             </defs>
+
+                            {/* Vertical Line for Tooltip */}
+                            {activePoint && (
+                                <line
+                                    x1={(trends.indexOf(activePoint) / (trends.length - 1)) * 1000}
+                                    y1="0"
+                                    x2={(trends.indexOf(activePoint) / (trends.length - 1)) * 1000}
+                                    y2="300"
+                                    stroke="#e2e8f0"
+                                    strokeWidth="1"
+                                    strokeDasharray="4 4"
+                                />
+                            )}
                         </svg>
 
+                        {/* Custom Tooltip */}
+                        {activePoint && (
+                            <div
+                                className="absolute z-[100] pointer-events-none p-4 bg-slate-900 text-white rounded-2xl shadow-2xl border border-white/10"
+                                style={{
+                                    left: mousePos.x + 20 > 800 ? mousePos.x - 180 : mousePos.x + 20,
+                                    top: mousePos.y - 80,
+                                }}
+                            >
+                                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
+                                    {new Date(activePoint.timestamp).toLocaleDateString()} {new Date(activePoint.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                                <p className="text-lg font-bold mt-1">₹{Number(activePoint.displayValue).toLocaleString()}</p>
+                            </div>
+                        )}
+
                         {/* Real-time Indicator Dot */}
-                        <div className="absolute top-[20px] right-0 flex items-center gap-2">
+                        <div className="absolute top-0 right-0 flex items-center gap-2">
                             <div className="size-1.5 bg-emerald-500 rounded-full animate-ping" />
-                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Live</span>
+                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Live Node Monitoring</span>
                         </div>
                     </div>
 
@@ -257,7 +305,14 @@ export const Dashboard: React.FC = () => {
                                         <p className="text-[9px] text-slate-400 uppercase font-medium">{new Date(tx.date).toLocaleTimeString()}</p>
                                     </div>
                                 </div>
-                                <p className="text-xs font-bold text-slate-900">₹{(tx.amount / 100).toLocaleString()}</p>
+                                <div className="text-right">
+                                    <p className={`text-xs font-bold ${(tx.status === 'DEBIT' || tx.type === 'DEBIT') ? 'text-red-500' : 'text-slate-900'}`}>
+                                        {(tx.status === 'DEBIT' || tx.type === 'DEBIT') ? '-' : ''}₹{(tx.amount / 100).toLocaleString()}
+                                    </p>
+                                    {showUserMode && tx.balance !== undefined && (
+                                        <p className="text-[9px] text-blue-500/80 font-bold mt-0.5">₹{(tx.balance / 100).toLocaleString()}</p>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>

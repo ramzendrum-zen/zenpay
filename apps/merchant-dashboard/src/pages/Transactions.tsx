@@ -35,9 +35,10 @@ export const Transactions: React.FC = () => {
                     if (data.status === 'success') {
                         const ledgerRows = data.data.map((l: any) => ({
                             id: l.id,
-                            customer: l.type === 'CREDIT' ? 'Received' : 'Sent',
-                            email: `ref: ${l.referenceId}`,
+                            customer: l.type === 'CREDIT' ? 'Funds Received' : 'Funds Sent',
+                            email: `${l.referenceType}: ${l.referenceId.slice(0, 12)}`,
                             amount: l.amountPaise,
+                            balance: l.balanceAfter,
                             status: l.type === 'CREDIT' ? 'PAID' : 'DEBIT',
                             date: l.createdAt
                         }));
@@ -176,14 +177,15 @@ export const Transactions: React.FC = () => {
                                 <tr className="bg-slate-50/10">
                                     <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
                                     <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Payment ID</th>
-                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Customer info</th>
+                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">{showUserMode ? 'Source/Type' : 'Customer info'}</th>
                                     <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">Amount</th>
+                                    <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">Balance</th>
                                     <th className="px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">Date & Time</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100/60 font-medium">
                                 {filtered.length === 0 && (
-                                    <tr><td colSpan={5} className="text-center py-16 text-slate-300 text-xs font-bold uppercase tracking-widest">No transactions found</td></tr>
+                                    <tr><td colSpan={6} className="text-center py-16 text-slate-300 text-xs font-bold uppercase tracking-widest">No transactions found</td></tr>
                                 )}
                                 {filtered.map((txn, idx) => (
                                     <motion.tr key={txn.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }} className="group hover:bg-slate-50/40 transition-all cursor-pointer">
@@ -192,7 +194,9 @@ export const Transactions: React.FC = () => {
                                                 <div className={`p-1 rounded border ${getStatusStyle(txn.status)}`}>
                                                     {txn.status === 'PAID' ? <CheckCircle2 size={12} /> : txn.status === 'PENDING' ? <Clock size={12} /> : txn.status === 'REFUNDED' ? <RotateCcw size={12} /> : <XCircle size={12} />}
                                                 </div>
-                                                <span className={`text-[10px] font-bold uppercase tracking-tight ${txn.status === 'PAID' ? 'text-emerald-700' : 'text-slate-500'}`}>{txn.status === 'PAID' ? 'Succeeded' : txn.status.toLowerCase()}</span>
+                                                <span className={`text-[10px] font-bold uppercase tracking-tight ${txn.status === 'PAID' || txn.status === 'CREDIT' ? 'text-emerald-700' : 'text-slate-500'}`}>
+                                                    {txn.status === 'PAID' ? 'Success' : txn.status === 'DEBIT' ? 'Sent' : txn.status.toLowerCase()}
+                                                </span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
@@ -205,8 +209,14 @@ export const Transactions: React.FC = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <p className={`text-xs font-bold leading-none ${txn.status === 'DEBIT' ? 'text-red-500' : 'text-slate-900'}`}>₹{formatPaise(txn.amount)}</p>
-                                            <p className="text-[9px] text-slate-400 mt-1 uppercase font-bold tracking-tighter">{txn.status === 'DEBIT' ? 'Sent' : 'INR'}</p>
+                                            <p className={`text-xs font-bold leading-none ${txn.status === 'DEBIT' ? 'text-red-500' : 'text-slate-900'}`}>{txn.status === 'DEBIT' ? `- ₹${formatPaise(txn.amount)}` : `₹${formatPaise(txn.amount)}`}</p>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            {showUserMode ? (
+                                                <p className="text-xs font-bold text-blue-600/70">₹{formatPaise(txn.balance)}</p>
+                                            ) : (
+                                                <p className="text-[10px] text-slate-300 font-bold uppercase tracking-tighter">--</p>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <p className="text-[11px] font-bold text-slate-900">{new Date(txn.date).toLocaleDateString([], { month: 'short', day: '2-digit' })}</p>
