@@ -92,7 +92,9 @@ app.get('/health', (req, res) => {
     version: '2.0.0',
     service: 'ZenWallet Core Engine',
     timestamp: new Date().toISOString(),
-    features: ['rate-limiting', 'idempotency', 'hmac-signatures', 'webhooks', 'api-keys']
+    features: ['rate-limiting', 'idempotency', 'hmac-signatures', 'webhooks', 'api-keys'],
+    debug_dirname: __dirname,
+    debug_public: path.join(__dirname, '../public')
   });
 });
 
