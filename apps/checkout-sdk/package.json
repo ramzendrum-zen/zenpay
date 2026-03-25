@@ -1,5 +1,5 @@
 {
-    "name": "@zenwallet/checkout-sdk",
+    "name": "@zenpay/checkout-sdk",
     "version": "1.0.0",
     "private": true,
     "type": "module",
@@ -22,7 +22,7 @@
     },
     "exports": {
         ".": {
-            "browser": "./dist/loader/zenwallet.js"
+            "browser": "./dist/loader/ZenPay.js"
         }
     },
     "devDependencies": {

@@ -5,7 +5,7 @@ async function testKeyGeneration() {
     const merchant = await (prisma as any).merchant.findFirst();
     if (!merchant) { console.error('No merchant found'); return; }
 
-    const secret = process.env.JWT_SECRET || 'zenwallet_jwt_secret_change_in_production';
+    const secret = process.env.JWT_SECRET || 'ZenPay_jwt_secret_change_in_production';
     const token = jwt.sign({ merchantId: merchant.id }, secret, { expiresIn: '7d' });
     console.log('Test token for merchant:', merchant.name);
     console.log('Token:', token.slice(0, 50) + '...');

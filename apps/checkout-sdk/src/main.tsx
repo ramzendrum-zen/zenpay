@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ZenWalletCheckout } from './components/ZenWalletCheckout';
+import { ZenPayCheckout } from './components/ZenPayCheckout';
 import './index.css';
 
 // Read URL parameters provided by the loader iframe src
@@ -11,7 +11,7 @@ const publicKey = params.get('key');
 
 const handleSuccess = (res: any) => {
     window.parent.postMessage({
-        source: 'zenwallet-checkout',
+        source: 'ZenPay-checkout',
         type: 'PAYMENT_SUCCESS',
         payload: res
     }, "*");
@@ -19,7 +19,7 @@ const handleSuccess = (res: any) => {
 
 const handleFailure = (err: any) => {
     window.parent.postMessage({
-        source: 'zenwallet-checkout',
+        source: 'ZenPay-checkout',
         type: 'PAYMENT_FAILED',
         payload: err
     }, "*");
@@ -28,7 +28,7 @@ const handleFailure = (err: any) => {
 // If someone closes the checkout modal directly in UI
 const handleClose = () => {
     window.parent.postMessage({
-        source: 'zenwallet-checkout',
+        source: 'ZenPay-checkout',
         type: 'MODAL_CLOSE'
     }, "*");
 }
@@ -43,7 +43,7 @@ if (container) {
             <div className="flex items-center justify-center h-screen bg-gray-100 font-sans">
                 <div className="bg-white p-8 rounded-xl shadow-sm text-center">
                     <h1 className="text-xl font-bold text-gray-800 mb-2">Checkout SDK Hosted App</h1>
-                    <p className="text-gray-500 mb-6 text-sm">This page is meant to be opened via the ZenWallet Loader within an Iframe.</p>
+                    <p className="text-gray-500 mb-6 text-sm">This page is meant to be opened via the ZenPay Loader within an Iframe.</p>
                     <div className="text-xs text-left bg-gray-50 p-4 rounded text-gray-600 font-mono">
                         Usage: ?key=pk_live_xx&order_id=ord_xxx
                     </div>
@@ -52,7 +52,7 @@ if (container) {
         );
     } else {
         root.render(
-            <ZenWalletCheckout
+            <ZenPayCheckout
                 orderId={orderId}
                 publicKey={publicKey}
                 onSuccess={handleSuccess}

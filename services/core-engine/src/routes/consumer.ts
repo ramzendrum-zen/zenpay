@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma';
 import { authenticateUser, AuthRequest } from '../middleware/auth';
-import { generateCardNumber, generateUPI, maskCard } from '@zenwallet/utils';
+import { generateCardNumber, generateUPI, maskCard } from '@zenpay/utils';
 import { emitToUser } from '../lib/socket';
 
 const router = Router();

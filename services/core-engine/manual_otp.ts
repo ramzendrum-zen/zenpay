@@ -14,9 +14,9 @@ async function sendManualOtp() {
     console.log(`Sending manual OTP ${otp} to ${email}...`);
     try {
         const info = await transporter.sendMail({
-            from: '"ZenWallet Help" <eventbooking.otp@gmail.com>',
+            from: '"ZenPay Help" <eventbooking.otp@gmail.com>',
             to: email,
-            subject: `Your ZenWallet OTP is ${otp}`,
+            subject: `Your ZenPay OTP is ${otp}`,
             text: `Your manual verification code is: ${otp}. Please enter this on the website to activate your account.`
         });
         console.log('Sent:', info.messageId);

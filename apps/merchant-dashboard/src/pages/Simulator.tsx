@@ -69,16 +69,21 @@ export const Simulator: React.FC = () => {
             const realOrderId = orderRes.data.id;
             addLog(`Order ID Generated: ${realOrderId}`, 'success');
 
-            if (!(window as any).ZenWallet) {
+            if (!(window as any).ZenPay) {
                 const script = document.createElement('script');
-                script.src = 'https://zenpay-jshp.onrender.com/zenwallet-sdk.js';
+                const isLocal = window.location.hostname === 'localhost';
+                
+                // Primary source: Load directly from our API Gateway
+                const gatewayUrl = `${API_BASE.replace('/v1', '')}/ZenPay-sdk.js`;
+                script.src = isLocal ? gatewayUrl : 'https://zenpay-jshp.onrender.com/ZenPay-sdk.js';
+                
                 script.onload = () => {
                     addLog('SDK ready.', 'success');
                     setTimeout(() => launchCheckout(realOrderId), 400);
                 };
                 script.onerror = () => {
                     setStep('FAILURE');
-                    addLog('SDK Load Error.', 'error');
+                    addLog(`SDK Load Error. (Check ${gatewayUrl})`, 'error');
                 };
                 document.head.appendChild(script);
             } else {
@@ -91,11 +96,14 @@ export const Simulator: React.FC = () => {
     };
 
     const launchCheckout = (realOrderId: string) => {
-        if ((window as any).ZenWallet) {
-            (window as any).ZenWallet.open({
-                key: merchant?.publicKey || 'pk_live_demo_123',
+        if ((window as any).ZenPay) {
+            const isLocal = window.location.hostname === 'localhost';
+            (window as any).ZenPay.open({
+                key: merchant?.publicKey || 'pk_live_demo123',
                 amount: Math.round(parseFloat(config.amount) * 100),
                 order_id: realOrderId,
+                // In local dev, point the iframe to the port 5174 server
+                checkoutUrl: isLocal ? 'http://localhost:5174/' : undefined,
                 onSuccess: (response: any) => {
                     addLog('Authorized.', 'success', response);
                     setStep('SUCCESS');
@@ -154,7 +162,7 @@ export const Simulator: React.FC = () => {
                                 <button
                                     onClick={handleMockCheckout}
                                     disabled={step === 'PROCESSING'}
-                                    className="w-full h-11 bg-blue-600 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest shadow-sm active:scale-95 disabled:bg-slate-100 disabled:text-slate-300 flex items-center justify-center gap-2"
+                                    className="w-full h-11 bg-slate-900 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest shadow-sm active:scale-95 disabled:bg-slate-100 disabled:text-slate-300 flex items-center justify-center gap-2"
                                 >
                                     {step === 'PROCESSING' ? <Loader2 className="animate-spin" size={12} /> : <Play size={12} />}
                                     Launch
@@ -180,10 +188,10 @@ export const Simulator: React.FC = () => {
 
                 {/* ── Right Pane: Live Logs (8 Cols) ── */}
                 <div className="lg:col-span-8">
-                    <div className="bg-slate-900 rounded-2xl shadow-xl flex flex-col h-[580px] border border-slate-800 overflow-hidden">
-                        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-                            <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><Terminal size={12} /> Protocol Stream</h3>
-                            <Activity size={10} className="text-slate-700 animate-pulse" />
+                    <div className="bg-white rounded-2xl shadow-sm flex flex-col h-[400px] md:h-[580px] border border-slate-200/60 overflow-hidden">
+                        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                            <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><Terminal size={12} /> Protocol Stream</h3>
+                            <Activity size={10} className="text-slate-200 animate-pulse" />
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-5 font-mono no-scrollbar">
@@ -195,11 +203,11 @@ export const Simulator: React.FC = () => {
                                 <div className="space-y-4">
                                     {logs.map((log) => (
                                         <div key={log.id} className="flex items-start gap-4">
-                                            <span className="text-slate-700 text-[9px] font-bold shrink-0 mt-1">{log.timestamp}</span>
+                                            <span className="text-slate-300 text-[9px] font-bold shrink-0 mt-1">{log.timestamp}</span>
                                             <div className="flex-1 space-y-2">
-                                                <p className={`text-[11px] font-medium leading-tight ${log.type === 'success' ? 'text-emerald-400' : log.type === 'error' ? 'text-red-400' : 'text-slate-400'}`}>{log.message}</p>
+                                                <p className={`text-[11px] font-bold leading-tight ${log.type === 'success' ? 'text-emerald-600' : log.type === 'error' ? 'text-red-600' : 'text-slate-900'}`}>{log.message}</p>
                                                 {log.data && (
-                                                    <pre className="p-3 bg-black/40 rounded-lg text-blue-500/70 text-[9px] overflow-x-auto border border-slate-800/50">{JSON.stringify(log.data, null, 2)}</pre>
+                                                    <pre className="p-3 bg-slate-50 rounded-lg text-slate-400 text-[9px] overflow-x-auto border border-slate-100">{JSON.stringify(log.data, null, 2)}</pre>
                                                 )}
                                             </div>
                                         </div>
@@ -209,6 +217,7 @@ export const Simulator: React.FC = () => {
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     );

@@ -132,7 +132,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose, onR
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Biometric Encrypted</p>
-                                    <p className="text-[11px] text-slate-500 font-medium">Verified by ZenWallet Security Node.</p>
+                                    <p className="text-[11px] text-slate-500 font-medium">Verified by ZenPay Security Node.</p>
                                 </div>
                             </div>
                         </div>

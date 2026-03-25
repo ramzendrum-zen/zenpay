@@ -124,31 +124,31 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 exports.Prisma.MerchantScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  email: 'email',
+  businessName: 'businessName',
+  passwordHash: 'passwordHash',
   publicKey: 'publicKey',
   secretKeyHash: 'secretKeyHash',
+  secretKey: 'secretKey',
   status: 'status',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  businessName: 'businessName',
-  email: 'email',
   emailVerified: 'emailVerified',
   otpCode: 'otpCode',
   otpExpiry: 'otpExpiry',
-  passwordHash: 'passwordHash',
-  secretKey: 'secretKey'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.ApiKeyScalarFieldEnum = {
   id: 'id',
   merchantId: 'merchantId',
+  name: 'name',
   publicKey: 'publicKey',
   secretKeyHash: 'secretKeyHash',
+  secretKey: 'secretKey',
   environment: 'environment',
   createdAt: 'createdAt',
   revokedAt: 'revokedAt',
-  lastUsedAt: 'lastUsedAt',
-  secretKey: 'secretKey',
-  name: 'name'
+  lastUsedAt: 'lastUsedAt'
 };
 
 exports.Prisma.WebhookScalarFieldEnum = {
@@ -178,12 +178,12 @@ exports.Prisma.UserScalarFieldEnum = {
   name: 'name',
   email: 'email',
   upiId: 'upiId',
-  status: 'status',
-  createdAt: 'createdAt',
   passwordHash: 'passwordHash',
   transactionPinHash: 'transactionPinHash',
   failedPinAttempts: 'failedPinAttempts',
-  lockedUntil: 'lockedUntil'
+  lockedUntil: 'lockedUntil',
+  status: 'status',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.CardScalarFieldEnum = {
@@ -200,14 +200,15 @@ exports.Prisma.CardScalarFieldEnum = {
 exports.Prisma.OrderScalarFieldEnum = {
   id: 'id',
   merchantId: 'merchantId',
+  apiKeyId: 'apiKeyId',
   amountPaise: 'amountPaise',
   currency: 'currency',
   receipt: 'receipt',
   status: 'status',
   idempotencyKey: 'idempotencyKey',
+  expiresAt: 'expiresAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  expiresAt: 'expiresAt'
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.PaymentScalarFieldEnum = {
@@ -219,12 +220,12 @@ exports.Prisma.PaymentScalarFieldEnum = {
   amountPaise: 'amountPaise',
   riskScore: 'riskScore',
   signature: 'signature',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
   authorizationId: 'authorizationId',
   capturedAt: 'capturedAt',
   failedReason: 'failedReason',
-  refundedPaise: 'refundedPaise'
+  refundedPaise: 'refundedPaise',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.LedgerEntriesScalarFieldEnum = {
@@ -289,9 +290,9 @@ exports.Prisma.PaymentStateTransitionScalarFieldEnum = {
   paymentId: 'paymentId',
   fromStatus: 'fromStatus',
   toStatus: 'toStatus',
+  actor: 'actor',
   reason: 'reason',
-  timestamp: 'timestamp',
-  actor: 'actor'
+  timestamp: 'timestamp'
 };
 
 exports.Prisma.SortOrder = {

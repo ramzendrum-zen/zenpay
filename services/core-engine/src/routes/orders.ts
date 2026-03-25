@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import prisma from '../lib/prisma';
 import { getIdempotentResponse, saveIdempotentResponse } from '../lib/idempotency';
 import { authenticateMerchant, AuthRequest } from '../middleware/auth';
-import { OrderStatus } from '@zenwallet/shared-types';
+import { OrderStatus } from '@zenpay/shared-types';
 
 const router = Router();
 

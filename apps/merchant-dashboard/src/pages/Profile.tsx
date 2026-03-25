@@ -69,16 +69,16 @@ export const Profile: React.FC = () => {
         );
     }
 
-    const upiId = user?.user?.upiId || `${merchant?.name?.toLowerCase().replace(/\s/g, '') || 'user'}@zenwallet`;
+    const upiId = user?.user?.upiId || `${merchant?.name?.toLowerCase().replace(/\s/g, '') || 'user'}@zenpay`;
     const email = user?.user?.email || merchant?.email || "user@example.com";
-    const name = user?.user?.name || merchant?.name || "ZenWallet User";
+    const name = user?.user?.name || merchant?.name || "ZenPay User";
     const initial = name.charAt(0).toUpperCase();
 
     // Reconstruct data for QR (using UPI as the unique identifier)
     const qrData = JSON.stringify({
         id: user?.user?.id || merchant?.id,
         upiId: upiId,
-        type: 'zenwallet_node'
+        type: 'ZenPay_node'
     });
 
     return (

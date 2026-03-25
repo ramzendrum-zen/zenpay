@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export class ZenWalletSDK {
+export class ZenPaySDK {
     private apiKey: string;
     private baseUrl: string;
 

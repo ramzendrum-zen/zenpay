@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import crypto from 'crypto';
-import prisma from '@zenwallet/db';
+import prisma from '@zenpay/db';
 
 dotenv.config();
 

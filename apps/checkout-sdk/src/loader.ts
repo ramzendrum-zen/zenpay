@@ -1,4 +1,4 @@
-interface ZenWalletOptions {
+interface ZenPayOptions {
     key: string;
     order_id?: string;
     name?: string;
@@ -9,11 +9,11 @@ interface ZenWalletOptions {
     checkoutUrl?: string; // allow override for local dev
 }
 
-class ZenWallet {
-    private options: ZenWalletOptions;
+class ZenPay {
+    private options: ZenPayOptions;
     private iframeInfo: HTMLIFrameElement | null;
 
-    constructor(options: ZenWalletOptions) {
+    constructor(options: ZenPayOptions) {
         this.options = { ...options };
         this.iframeInfo = null;
         this._setupMessageListener();
@@ -21,7 +21,7 @@ class ZenWallet {
 
     private _setupMessageListener() {
         window.addEventListener("message", (event) => {
-            if (!event.data || event.data.source !== "zenwallet-checkout") return;
+            if (!event.data || event.data.source !== "ZenPay-checkout") return;
 
             const { type, payload } = event.data;
 
@@ -41,9 +41,9 @@ class ZenWallet {
         });
     }
 
-    open(checkoutOptions?: Partial<ZenWalletOptions>) {
+    open(checkoutOptions?: Partial<ZenPayOptions>) {
         const orderId = checkoutOptions?.order_id || this.options.order_id;
-        if (!orderId) throw new Error("ZenWallet: order_id is required");
+        if (!orderId) throw new Error("ZenPay: order_id is required");
 
         const iframe = document.createElement("iframe");
 
@@ -81,17 +81,17 @@ class ZenWallet {
         }
     }
 
-    static open(options: ZenWalletOptions) {
-        const instance = new ZenWallet(options);
+    static open(options: ZenPayOptions) {
+        const instance = new ZenPay(options);
         instance.open(options);
     }
 }
 
 // Expose safely to merchant window
 if (typeof window !== "undefined") {
-    (window as any).ZenWallet = ZenWallet;
-    (window as any).ZenPay = ZenWallet;
-    console.log("🚀 ZenWallet Loader SDK Initialized (v1.0.0)");
+    (window as any).ZenPay = ZenPay;
+    (window as any).ZenPay = ZenPay;
+    console.log("🚀 ZenPay Loader SDK Initialized (v1.0.0)");
 }
 
-export default ZenWallet;
+export default ZenPay;

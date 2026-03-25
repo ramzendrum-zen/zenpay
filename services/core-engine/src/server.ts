@@ -60,18 +60,20 @@ app.use((req, res, next) => {
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-Merchant-Id', 'X-ZenWallet-Signature']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-Merchant-Id', 'X-ZenPay-Signature']
 }));
 app.use(express.json());
 app.use(globalLimiter);
-app.use(express.static(path.join(__dirname, '../public'), {
-  setHeaders: (res, staticPath) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    if (staticPath.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript');
-    }
-  }
-}));
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Serve the SDK loader specifically (bridge between monorepo packages)
+app.use('/ZenPay-sdk.js', (req, res) => {
+  const loaderPath = path.resolve(__dirname, '../../../apps/checkout-sdk/dist/loader/zenpay.js');
+  res.sendFile(loaderPath, { headers: { 'Content-Type': 'application/javascript' } });
+});
+
+
+
 app.use(requestIdMiddleware);
 app.use(idempotencyMiddleware);
 app.use(apiLogger);
@@ -91,7 +93,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     version: '2.0.0',
-    service: 'ZenWallet Core Engine',
+    service: 'ZenPay Core Engine',
     timestamp: new Date().toISOString(),
     features: ['rate-limiting', 'idempotency', 'hmac-signatures', 'webhooks', 'api-keys'],
     debug_dirname: __dirname,
@@ -111,7 +113,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 httpServer.listen(Number(PORT), '0.0.0.0', () => {
-  console.log(`🚀 ZenWallet Core Engine v2.0 running on port ${PORT}`);
+  console.log(`🚀 ZenPay Core Engine v2.0 running on port ${PORT}`);
   console.log(`   ✅ Rate limiting: 100 req/min per merchant`);
   console.log(`   ✅ Idempotency keys: 24h TTL`);
   console.log(`   ✅ HMAC signature verification`);

@@ -259,7 +259,7 @@ const FlippableCreditCard = React.forwardRef<HTMLDivElement, FlippableCreditCard
                             <div className="relative flex h-full flex-col justify-between p-7">
                                 <div className="flex items-start justify-between">
                                     <div className="flex flex-col">
-                                        <span className="text-xs font-bold tracking-widest text-slate-400">ZENWALLET</span>
+                                        <span className="text-xs font-bold tracking-widest text-slate-400">ZenPay</span>
                                         <span className="text-[9px] font-bold text-violet-500/80 mt-1">SECURE VIRTUAL CARD</span>
                                     </div>
                                     <div className="flex flex-col items-end gap-1">
@@ -343,7 +343,7 @@ const FlippableCreditCard = React.forwardRef<HTMLDivElement, FlippableCreditCard
                                 </div>
                                 <div className="mt-auto px-6 flex justify-between items-end">
                                     <div className="text-slate-500 text-[8px] font-medium leading-relaxed max-w-[60%]">
-                                        This card is issued by ZenWallet for secure transactions. Authorized use only. Do not share your CVV.
+                                        This card is issued by ZenPay for secure transactions. Authorized use only. Do not share your CVV.
                                     </div>
                                     <svg className="h-8 w-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
                                         <path fill="#ff9800" d="M32 10A14 14 0 1 0 32 38A14 14 0 1 0 32 10Z" />

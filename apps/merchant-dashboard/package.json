@@ -1,5 +1,5 @@
 {
-  "name": "@zenwallet/merchant-dashboard",
+  "name": "@zenpay/merchant-dashboard",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@zenwallet/shared-types": "*",
+    "@zenpay/shared-types": "*",
     "axios": "^1.13.6",
     "clsx": "^2.1.1",
     "esbuild": "^0.27.3",

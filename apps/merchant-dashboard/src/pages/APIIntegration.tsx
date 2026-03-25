@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Loader2, Key, Globe, Activity, Terminal, Copy, Check, Trash2, Plus, ShieldCheck, ExternalLink, X } from 'lucide-react';
+import { Loader2, Key, Globe, Activity, Terminal, Copy, Check, Trash2, Plus, ShieldCheck, ExternalLink, X, Zap } from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -132,7 +133,7 @@ export const APIIntegration: React.FC = () => {
     };
 
     const pubKey = keys.find((k: any) => !k.revokedAt)?.publicKey || 'pk_live_demo_123';
-    const aiPrompt = `Implement ZenWallet integration using:
+    const aiPrompt = `Implement ZenPay integration using:
 - Public Key: ${pubKey}
 - API Endpoints: ${API_BASE}
 - Security: HMAC-SHA256 signature verification`;
@@ -161,7 +162,7 @@ export const APIIntegration: React.FC = () => {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold transition-all ${activeTab === tab.id
-                            ? 'bg-white text-blue-600 shadow-sm'
+                            ? 'bg-white text-slate-900 shadow-sm'
                             : 'text-slate-500 hover:text-slate-700'
                             }`}
                     >
@@ -170,6 +171,7 @@ export const APIIntegration: React.FC = () => {
                     </button>
                 ))}
             </div>
+
 
             <AnimatePresence mode="wait">
                 <motion.div key={activeTab} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }}>
@@ -181,6 +183,32 @@ export const APIIntegration: React.FC = () => {
 
                             {activeTab === 'keys' && (
                                 <div className="space-y-4">
+                                    {/* Stats Cards */}
+                                    <div className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            <div className="bg-white border border-slate-200/60 p-6 rounded-2xl shadow-sm">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Total Keys</p>
+                                                <div className="flex items-end justify-between">
+                                                    <h3 className="text-2xl font-bold text-slate-900">{keys.length}</h3>
+                                                    <div className="p-2 bg-slate-50 rounded-lg text-slate-600"><Key size={16} /></div>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white border border-slate-200/60 p-6 rounded-2xl shadow-sm">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Active Nodes</p>
+                                                <div className="flex items-end justify-between">
+                                                    <h3 className="text-2xl font-bold text-slate-900">{keys.length}</h3>
+                                                    <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600"><Zap size={16} /></div>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white border border-slate-200/60 p-6 rounded-2xl shadow-sm">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">API Health</p>
+                                                <div className="flex items-end justify-between">
+                                                    <h3 className="text-2xl font-bold text-slate-900">99.9%</h3>
+                                                    <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Globe size={16} /></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <h3 className="text-xs font-bold text-slate-700">Access Keys</h3>
@@ -210,39 +238,41 @@ export const APIIntegration: React.FC = () => {
                                         </Card>
                                     )}
 
-                                    <Card className="overflow-hidden">
-                                        <table className="w-full text-left font-sans">
-                                            <thead>
-                                                <tr className="border-b border-slate-100 bg-slate-50/50">
-                                                    <th className="px-4 py-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Name</th>
-                                                    <th className="px-4 py-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Public Key</th>
-                                                    <th className="px-4 py-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-100/60 font-medium">
-                                                {keys.length > 0 ? keys.map((k) => (
-                                                    <tr key={k.id} className="group hover:bg-slate-50/30 transition-all">
-                                                        <td className="px-4 py-3 text-[11px] font-bold text-slate-700">{k.name}</td>
-                                                        <td className="px-4 py-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <code className="text-[10px] font-mono text-slate-400">pk_live_{k.publicKey?.slice(-8)}</code>
-                                                                <button onClick={() => handleCopy(k.publicKey, k.id)} className="p-1 text-slate-200 hover:text-blue-600 transition-all">
-                                                                    {copying === k.id ? <Check size={10} /> : <Copy size={10} />}
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-4 py-3 text-right">
-                                                            <button onClick={() => handleDeleteKey(k.id)} className="p-1 text-slate-200 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100">
-                                                                <Trash2 size={12} />
-                                                            </button>
-                                                        </td>
+                                    <div className="overflow-x-auto -mx-6 md:mx-0">
+                                        <Card className="min-w-[600px] md:min-w-0 overflow-hidden">
+                                            <table className="w-full text-left font-sans">
+                                                <thead>
+                                                    <tr className="border-b border-slate-100 bg-slate-50/50">
+                                                        <th className="px-4 py-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Name</th>
+                                                        <th className="px-4 py-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Public Key</th>
+                                                        <th className="px-4 py-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
                                                     </tr>
-                                                )) : (
-                                                    <tr><td colSpan={3} className="px-4 py-8 text-center text-[10px] font-medium text-slate-400">No active keys</td></tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </Card>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100/60 font-medium">
+                                                    {keys.length > 0 ? keys.map((k) => (
+                                                        <tr key={k.id} className="group hover:bg-slate-50/30 transition-all">
+                                                            <td className="px-4 py-3 text-[11px] font-bold text-slate-700">{k.name}</td>
+                                                            <td className="px-4 py-3">
+                                                                <div className="flex items-center gap-2">
+                                                                    <code className="text-[10px] font-mono text-slate-400">pk_live_{k.publicKey?.slice(-8)}</code>
+                                                                    <button onClick={() => handleCopy(k.publicKey, k.id)} className="p-1 text-slate-200 hover:text-blue-600 transition-all">
+                                                                        {copying === k.id ? <Check size={10} /> : <Copy size={10} />}
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right">
+                                                                <button onClick={() => handleDeleteKey(k.id)} className="p-1 text-slate-200 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100">
+                                                                    <Trash2 size={12} />
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    )) : (
+                                                        <tr><td colSpan={3} className="px-4 py-8 text-center text-[10px] font-medium text-slate-400">No active keys</td></tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </Card>
+                                    </div>
                                 </div>
                             )}
 

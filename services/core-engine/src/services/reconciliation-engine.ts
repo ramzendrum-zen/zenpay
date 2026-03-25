@@ -58,7 +58,7 @@ async function reversePayment(payment: any) {
         // Note: In our current flow, 'AUTHORIZED' means no ledger DEBIT was created yet.
         // We only reserve the logic for DEBIT at CAPTURE.
         // If money WAS debited during AUTHORIZE in some external implementation, we would insert a ledger CREDIT here.
-        // Since ZenWallet drops the DEBIT precisely upon CAPTURED state, we only need to safely transition state to REVERSED.
+        // Since ZenPay drops the DEBIT precisely upon CAPTURED state, we only need to safely transition state to REVERSED.
 
         await tx.payment.update({
             where: { id: payment.id },

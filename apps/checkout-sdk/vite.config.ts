@@ -28,13 +28,13 @@ export default defineConfig(({ mode }) => {
         },
         build: isLoaderBuild
             // ─── LOADER BUILD ───────────────────────────────────────────────
-            // Compiles src/loader.ts → dist/zenwallet.js  (IIFE, no React)
+            // Compiles src/loader.ts → dist/ZenPay.js  (IIFE, no React)
             // This is what merchants include via <script src="...">
             ? {
                 lib: {
                     entry: path.resolve(__dirname, 'src/loader.ts'),
-                    name: 'ZenWallet',
-                    fileName: () => 'zenwallet.js',
+                    name: 'ZenPay',
+                    fileName: () => 'ZenPay.js',
                     formats: ['iife'],
                 },
                 outDir: 'dist/loader',

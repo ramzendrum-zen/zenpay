@@ -23,9 +23,9 @@ const MerchantDemo: React.FC = () => {
 
             const realOrderId = orderRes.data.id;
 
-            if (!(window as any).ZenWallet) {
+            if (!(window as any).ZenPay) {
                 const script = document.createElement('script');
-                script.src = 'https://zenpay-jshp.onrender.com/zenwallet-sdk.js';
+                script.src = 'https://zenpay-jshp.onrender.com/ZenPay-sdk.js';
                 script.onload = () => setTimeout(() => launchCheckout(realOrderId), 500);
                 document.head.appendChild(script);
             } else {
@@ -38,8 +38,8 @@ const MerchantDemo: React.FC = () => {
     };
 
     const launchCheckout = (realOrderId: string) => {
-        if ((window as any).ZenWallet) {
-            (window as any).ZenWallet.open({
+        if ((window as any).ZenPay) {
+            (window as any).ZenPay.open({
                 key: merchant?.publicKey || 'pk_live_demo_123',
                 order_id: realOrderId,
                 onSuccess: (response: any) => {
@@ -63,7 +63,7 @@ const MerchantDemo: React.FC = () => {
 
                 <h1 className="text-4xl font-black tracking-tight mb-4 text-slate-900 leading-none">Sample Merchant Store</h1>
                 <p className="text-slate-500 max-w-lg mx-auto mb-10 text-lg leading-relaxed">
-                    Experience the seamless ZenWallet checkout flow. This demo simulates a real merchant integration using our embeddable SDK.
+                    Experience the seamless ZenPay checkout flow. This demo simulates a real merchant integration using our embeddable SDK.
                 </p>
 
                 <div className="bg-slate-50 rounded-3xl p-8 mb-10 border border-slate-100 text-left">
@@ -85,7 +85,7 @@ const MerchantDemo: React.FC = () => {
                         className="w-full h-16 bg-slate-900 text-white rounded-[2rem] font-black text-lg hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-[0.98] flex items-center justify-center gap-3"
                     >
                         <span className="material-symbols-outlined">payments</span>
-                        Pay with ZenWallet
+                        Pay with ZenPay
                     </button>
                 )}
             </div>

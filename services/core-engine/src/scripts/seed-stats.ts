@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { OrderStatus, PaymentStatus } from '@zenwallet/shared-types';
+import { OrderStatus, PaymentStatus } from '@zenpay/shared-types';
 
 const prisma = new PrismaClient();
 
@@ -49,7 +49,7 @@ async function main() {
                 user = await prisma.user.create({
                     data: {
                         name: 'Test Consumer',
-                        email: 'consumer@zenwallet.com',
+                        email: 'consumer@zenpay.com',
                         upiId: 'test@zen'
                     }
                 });

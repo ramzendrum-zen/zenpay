@@ -57,9 +57,9 @@ export async function executeDelivery(deliveryId: string) {
         await axios.post(delivery.url, JSON.parse(delivery.payload), {
             headers: {
                 'Content-Type': 'application/json',
-                'X-ZenWallet-Signature': delivery.signature,
-                'X-ZenWallet-Timestamp': delivery.timestamp,
-                'X-ZenWallet-Event': delivery.event
+                'X-ZenPay-Signature': delivery.signature,
+                'X-ZenPay-Timestamp': delivery.timestamp,
+                'X-ZenPay-Event': delivery.event
             },
             timeout: 5000 // 5 second timeout for responsiveness
         });

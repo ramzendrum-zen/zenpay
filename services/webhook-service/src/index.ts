@@ -1,7 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import dotenv from 'dotenv';
-import { generateSignature } from '@zenwallet/utils';
+import { generateSignature } from '@zenpay/utils';
 
 dotenv.config();
 
@@ -36,7 +36,7 @@ app.post('/trigger', async (req, res) => {
         const response = await axios.post(webhookUrl, payload, {
             headers: {
                 'Content-Type': 'application/json',
-                'X-ZenWallet-Signature': signature
+                'X-ZenPay-Signature': signature
             },
             timeout: 5000
         });

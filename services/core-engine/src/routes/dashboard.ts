@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import prisma from '../lib/prisma';
 import { authenticateMerchant, AuthRequest } from '../middleware/auth';
-import { OrderStatus, PaymentStatus } from '@zenwallet/shared-types';
+import { OrderStatus, PaymentStatus } from '@zenpay/shared-types';
 
 const router = Router();
 

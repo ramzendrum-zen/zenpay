@@ -157,7 +157,7 @@ router.post('/verify-otp', async (req, res) => {
 
         return res.json({
             status: 'success',
-            message: 'Email verified. Welcome to ZenWallet!',
+            message: 'Email verified. Welcome to ZenPay!',
             data: {
                 token,
                 merchant: { id: merchant.id, name: merchant.name, email: merchant.email, businessName: merchant.businessName, publicKey: merchant.publicKey }

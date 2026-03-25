@@ -19,7 +19,7 @@ export async function sendWebhook(url: string, secret: string, payload: WebhookP
         await axios.post(url, payload, {
             headers: {
                 'Content-Type': 'application/json',
-                'x-zenwallet-signature': signature
+                'x-zenpay-signature': signature
             },
             timeout: 5000 // 5 seconds timeout
         });

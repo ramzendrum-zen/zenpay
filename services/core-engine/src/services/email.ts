@@ -27,7 +27,7 @@ async function sendWithRetry(mailOptions: any, retries = 2) {
           'content-type': 'application/json'
         },
         body: JSON.stringify({
-          sender: { name: 'ZenWallet', email: SMTP_USER },
+          sender: { name: 'ZenPay', email: SMTP_USER },
           to: [{ email: mailOptions.to }],
           subject: mailOptions.subject,
           htmlContent: mailOptions.html
@@ -55,7 +55,7 @@ async function sendWithRetry(mailOptions: any, retries = 2) {
           'Authorization': `Bearer ${RESEND_API_KEY}`
         },
         body: JSON.stringify({
-          from: `ZenWallet <onboarding@resend.dev>`,
+          from: `ZenPay <onboarding@resend.dev>`,
           to: [mailOptions.to],
           subject: mailOptions.subject,
           html: mailOptions.html
@@ -102,7 +102,7 @@ function emailBase(content: string): string {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ZenWallet</title>
+  <title>ZenPay</title>
 </head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:'Helvetica Neue',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:48px 16px;">
@@ -119,7 +119,7 @@ function emailBase(content: string): string {
                     <span style="color:white;font-size:18px;font-weight:900;line-height:38px;">Z</span>
                   </td>
                   <td style="padding-left:10px;vertical-align:middle;">
-                    <span style="font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-0.5px;">ZenWallet</span>
+                    <span style="font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-0.5px;">ZenPay</span>
                   </td>
                 </tr>
               </table>
@@ -137,7 +137,7 @@ function emailBase(content: string): string {
           <tr>
             <td align="center" style="padding-top:24px;">
               <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">
-                This email was sent by <span style="color:#64748b;font-weight:600;">ZenWallet Inc.</span><br/>
+                This email was sent by <span style="color:#64748b;font-weight:600;">ZenPay Inc.</span><br/>
                 If you didn't request this, you can safely ignore this email.
               </p>
             </td>
@@ -163,7 +163,7 @@ export async function sendVerificationEmail(toEmail: string, name: string, otp: 
             <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:0.12em;">Account Verification</p>
             <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#0f172a;line-height:1.3;">Verify your email address</h1>
             <p style="margin:0 0 32px;font-size:14px;color:#64748b;line-height:1.7;">
-              Hi <strong style="color:#0f172a;">${name}</strong>, welcome to ZenWallet. Enter the code below to activate your merchant account.
+              Hi <strong style="color:#0f172a;">${name}</strong>, welcome to ZenPay. Enter the code below to activate your merchant account.
             </p>
 
             <!-- OTP Block -->
@@ -206,7 +206,7 @@ export async function sendVerificationEmail(toEmail: string, name: string, otp: 
             </table>
 
             <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">
-              Do not share this code with anyone. ZenWallet will <strong style="color:#64748b;">never ask for your OTP</strong> by phone or chat.
+              Do not share this code with anyone. ZenPay will <strong style="color:#64748b;">never ask for your OTP</strong> by phone or chat.
             </p>
           </td>
         </tr>
@@ -214,9 +214,9 @@ export async function sendVerificationEmail(toEmail: string, name: string, otp: 
     `;
 
   await sendWithRetry({
-    from: `"ZenWallet" <${SMTP_USER}>`,
+    from: `"ZenPay" <${SMTP_USER}>`,
     to: toEmail,
-    subject: `${otp} is your ZenWallet verification code`,
+    subject: `${otp} is your ZenPay verification code`,
     html: emailBase(content)
   });
 }
@@ -232,7 +232,7 @@ export async function sendPasswordResetEmail(toEmail: string, name: string, otp:
             <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:0.12em;">Account Security</p>
             <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#0f172a;line-height:1.3;">Password reset request</h1>
             <p style="margin:0 0 32px;font-size:14px;color:#64748b;line-height:1.7;">
-              Hi <strong style="color:#0f172a;">${name}</strong>, we received a request to reset your ZenWallet account password. Use the code below to proceed.
+              Hi <strong style="color:#0f172a;">${name}</strong>, we received a request to reset your ZenPay account password. Use the code below to proceed.
             </p>
 
             <!-- OTP Block -->
@@ -290,9 +290,9 @@ export async function sendPasswordResetEmail(toEmail: string, name: string, otp:
     `;
 
   await sendWithRetry({
-    from: `"ZenWallet" <${SMTP_USER}>`,
+    from: `"ZenPay" <${SMTP_USER}>`,
     to: toEmail,
-    subject: `${otp} — ZenWallet password reset code`,
+    subject: `${otp} — ZenPay password reset code`,
     html: emailBase(content)
   });
 }

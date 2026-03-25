@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ZenWallet — Merchant Integration Demo</title>
+    <title>ZenPay — Merchant Integration Demo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -434,7 +434,7 @@
 
 <body>
     <div class="badge">Live Integration Demo</div>
-    <h1>ZenWallet Checkout SDK</h1>
+    <h1>ZenPay Checkout SDK</h1>
     <p class="subtitle">A production merchant demo showing real iframe-based checkout with postMessage communication,
         just like Stripe &amp; Razorpay.</p>
 
@@ -506,7 +506,7 @@
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
-            Pay Securely via ZenWallet
+            Pay Securely via ZenPay
         </button>
     </div>
 
@@ -514,12 +514,12 @@
     <div class="code-section">
         <div class="code-label">How this page integrates</div>
         <pre>
-<span class="cmnt">// 1. Load ZenWallet once (CDN / local)</span>
-&lt;<span class="kw">script</span> <span class="prop">src</span>=<span class="str">"https://zenpay-jshp.onrender.com/zenwallet-sdk.js"</span>&gt;&lt;/<span class="kw">script</span>&gt;
+<span class="cmnt">// 1. Load ZenPay once (CDN / local)</span>
+&lt;<span class="kw">script</span> <span class="prop">src</span>=<span class="str">"https://zenpay-jshp.onrender.com/ZenPay-sdk.js"</span>&gt;&lt;/<span class="kw">script</span>&gt;
 
 <span class="cmnt">// 2. Your backend creates the order, returns order_id
 // 3. Frontend opens checkout with that order_id</span>
-<span class="kw">const</span> zen = <span class="kw">new</span> <span class="fn">ZenWallet</span>({
+<span class="kw">const</span> zen = <span class="kw">new</span> <span class="fn">ZenPay</span>({
   <span class="prop">key</span>: <span class="str">"pk_test_acme_xxx"</span>,
   <span class="prop">onSuccess</span>: (res) => {
     <span class="cmnt">// POST res to your backend → verify HMAC → mark paid</span>
@@ -573,12 +573,12 @@ zen.<span class="fn">open</span>({ <span class="prop">order_id</span>: <span cla
         </div>
     </div>
 
-    <!-- ─── ZenWallet Loader ──────────────────────────────────────── -->
-    <!-- In production: <script src="https://js.zenwallet.com/v1/zenwallet.js"></script> -->
+    <!-- ─── ZenPay Loader ──────────────────────────────────────── -->
+    <!-- In production: <script src="https://js.ZenPay.com/v1/ZenPay.js"></script> -->
     <!-- In dev: we load loader.ts through Vite's module system via an inline script -->
     <script type="module">
         // In dev mode, we import loader.ts directly via Vite's module server.
-        // The ZenWallet class is manually extracted below since IIFE build
+        // The ZenPay class is manually extracted below since IIFE build
         // isn't running in dev — this simulates what the built loader would do.
 
         let selectedOrderId = 'order_9b2a1c32e4f';
@@ -591,9 +591,9 @@ zen.<span class="fn">open</span>({ <span class="prop">order_id</span>: <span cla
             document.getElementById('display-order-id').textContent = selectedOrderId;
         };
 
-        // ─── Inline ZenWallet Loader class ────────────────────────────────────────────
+        // ─── Inline ZenPay Loader class ────────────────────────────────────────────
         // Mirrors src/loader.ts — the actual built IIFE will replace this at runtime
-        class ZenWallet {
+        class ZenPay {
             constructor(options) {
                 this.options = { ...options };
                 this.iframe = null;
@@ -602,7 +602,7 @@ zen.<span class="fn">open</span>({ <span class="prop">order_id</span>: <span cla
 
             _listen() {
                 window.addEventListener('message', (event) => {
-                    if (!event.data || event.data.source !== 'zenwallet-checkout') return;
+                    if (!event.data || event.data.source !== 'ZenPay-checkout') return;
                     const { type, payload } = event.data;
                     if (type === 'PAYMENT_SUCCESS') {
                         if (this.options.onSuccess) this.options.onSuccess(payload);
@@ -617,7 +617,7 @@ zen.<span class="fn">open</span>({ <span class="prop">order_id</span>: <span cla
 
             open(checkoutOptions = {}) {
                 const orderId = checkoutOptions.order_id || this.options.order_id;
-                if (!orderId) throw new Error('ZenWallet: order_id is required');
+                if (!orderId) throw new Error('ZenPay: order_id is required');
 
                 const iframe = document.createElement('iframe');
                 const appUrl = 'https://zenpay-jshp.onrender.com/checkout/';
@@ -646,10 +646,10 @@ zen.<span class="fn">open</span>({ <span class="prop">order_id</span>: <span cla
         }
         // ─────────────────────────────────────────────────────────────────────────────
 
-        const zen = new ZenWallet({
+        const zen = new ZenPay({
             key: 'pk_test_acme_xxx',
             onSuccess: (res) => {
-                console.log('[ZenWallet] ✅ Payment Success — posting to backend for HMAC verify:', res);
+                console.log('[ZenPay] ✅ Payment Success — posting to backend for HMAC verify:', res);
                 const panel = document.getElementById('result-panel');
                 const card = document.getElementById('result-card');
                 const title = document.getElementById('result-title');
@@ -663,7 +663,7 @@ zen.<span class="fn">open</span>({ <span class="prop">order_id</span>: <span cla
                 // fetch('/verify-payment', { method: 'POST', body: JSON.stringify(res) });
             },
             onFailure: (err) => {
-                console.error('[ZenWallet] ❌ Payment Failed:', err);
+                console.error('[ZenPay] ❌ Payment Failed:', err);
                 const panel = document.getElementById('result-panel');
                 const card = document.getElementById('result-card');
                 const title = document.getElementById('result-title');

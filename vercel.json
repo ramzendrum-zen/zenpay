@@ -1,5 +1,5 @@
 {
-    "buildCommand": "npm run build --workspace=@zenwallet/merchant-dashboard",
+    "buildCommand": "npm run build --workspace=@zenpay/merchant-dashboard",
     "outputDirectory": "apps/merchant-dashboard/dist",
     "rewrites": [
         {

@@ -1,5 +1,5 @@
 {
-  "name": "zenwallet-platform",
+  "name": "zenpay-platform",
   "version": "1.0.0",
   "description": "Production-grade Payment Gateway Platform",
   "main": "index.js",

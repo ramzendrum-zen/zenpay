@@ -162,7 +162,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                     <div className="size-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
                         <Wallet size={20} />
                     </div>
-                    <span className="text-xl font-bold tracking-tight text-slate-900 italic">ZenWallet<span className="text-blue-600 font-medium">OS</span></span>
+                    <span className="text-xl font-bold tracking-tight text-slate-900 italic">ZenPay<span className="text-blue-600 font-medium">OS</span></span>
                 </div>
 
                 <div className="relative z-10 space-y-8 max-w-md">
@@ -261,7 +261,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
 
                                 <label className="flex items-start gap-3 cursor-pointer p-1">
                                     <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} className="mt-1 size-4 rounded border-slate-200 accent-blue-600" />
-                                    <span className="text-[10px] text-slate-400 leading-normal font-medium italic">I authorize node activation under ZenWallet protocols.</span>
+                                    <span className="text-[10px] text-slate-400 leading-normal font-medium italic">I authorize node activation under ZenPay protocols.</span>
                                 </label>
 
                                 <button type="submit" disabled={loading} className="w-full h-12 bg-blue-600 text-white font-bold text-[11px] uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-lg">

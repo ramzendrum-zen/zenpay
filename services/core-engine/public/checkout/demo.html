@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ZenWallet — Merchant Integration Demo</title>
+    <title>ZenPay — Merchant Integration Demo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -436,7 +436,7 @@
 
 <body>
     <div class="badge">Live Integration Demo</div>
-    <h1>ZenWallet Checkout SDK</h1>
+    <h1>ZenPay Checkout SDK</h1>
     <p class="subtitle">A production merchant demo showing real iframe-based checkout with postMessage communication,
         just like Stripe &amp; Razorpay.</p>
 
@@ -508,7 +508,7 @@
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
-            Pay Securely via ZenWallet
+            Pay Securely via ZenPay
         </button>
     </div>
 
@@ -516,12 +516,12 @@
     <div class="code-section">
         <div class="code-label">How this page integrates</div>
         <pre>
-<span class="cmnt">// 1. Load ZenWallet once (CDN / local)</span>
-&lt;<span class="kw">script</span> <span class="prop">src</span>=<span class="str">"https://zenpay-jshp.onrender.com/zenwallet-sdk.js"</span>&gt;&lt;/<span class="kw">script</span>&gt;
+<span class="cmnt">// 1. Load ZenPay once (CDN / local)</span>
+&lt;<span class="kw">script</span> <span class="prop">src</span>=<span class="str">"https://zenpay-jshp.onrender.com/ZenPay-sdk.js"</span>&gt;&lt;/<span class="kw">script</span>&gt;
 
 <span class="cmnt">// 2. Your backend creates the order, returns order_id
 // 3. Frontend opens checkout with that order_id</span>
-<span class="kw">const</span> zen = <span class="kw">new</span> <span class="fn">ZenWallet</span>({
+<span class="kw">const</span> zen = <span class="kw">new</span> <span class="fn">ZenPay</span>({
   <span class="prop">key</span>: <span class="str">"pk_test_acme_xxx"</span>,
   <span class="prop">onSuccess</span>: (res) => {
     <span class="cmnt">// POST res to your backend → verify HMAC → mark paid</span>
@@ -575,9 +575,10 @@ zen.<span class="fn">open</span>({ <span class="prop">order_id</span>: <span cla
         </div>
     </div>
 
-    <!-- ─── ZenWallet Loader ──────────────────────────────────────── -->
-    <!-- In production: <script src="https://js.zenwallet.com/v1/zenwallet.js"></script> -->
-    <!-- In dev: we load loader.ts through Vite's module system via an inline script -->
+    <!-- ─── ZenPay Loader ──────────────────────────────────────── -->
+    <!-- In production: <script src="https://js.ZenPay.com/v1/ZenPay.js"></script> -->
+    <!-- In dev: we load loader.ts through Vite's module system via an inline script -->
+
 </body>
 
 </html>

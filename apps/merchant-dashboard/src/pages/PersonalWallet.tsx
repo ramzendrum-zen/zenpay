@@ -81,7 +81,7 @@ export const PersonalWallet: React.FC = () => {
     const [isScanModalOpen, setIsScanModalOpen] = useState(false);
     const [scannedUpiId, setScannedUpiId] = useState('');
     const [revealedCard, setRevealedCard] = useState<{ cardNumber: string; cvv: string } | null>(null);
-    const [walletToken, setWalletToken] = useState<string | null>(localStorage.getItem('zw_wallet_token'));
+    const [walletToken, setWalletToken] = useState<string | null>(localStorage.getItem('zp_wallet_token'));
     const [isMyQrModalOpen, setIsMyQrModalOpen] = useState(false);
     const [isSetupPinModalOpen, setIsSetupPinModalOpen] = useState(false);
     const [setupPinValue, setSetupPinValue] = useState('');
@@ -173,7 +173,7 @@ export const PersonalWallet: React.FC = () => {
                 password: 'password123'
             });
             if (res.data?.data?.token) {
-                localStorage.setItem('zw_wallet_token', res.data.data.token);
+                localStorage.setItem('zp_wallet_token', res.data.data.token);
                 setWalletToken(res.data.data.token);
             }
             fetchWalletData();
@@ -375,7 +375,7 @@ export const PersonalWallet: React.FC = () => {
                     </div>
 
                     <FlippableCreditCard
-                        cardholderName={user?.user?.name || merchant?.name || 'ZenWallet User'}
+                        cardholderName={user?.user?.name || merchant?.name || 'ZenPay User'}
                         cardNumber={revealedCard?.cardNumber || user?.cards?.[0]?.cardNumber || ''}
                         expiryDate={`${user?.cards?.[0]?.expiryMonth?.toString().padStart(2, '0') || '12'}/${user?.cards?.[0]?.expiryYear?.toString().padStart(2, '0') || '30'}`}
                         cvv={revealedCard?.cvv || '•••'}

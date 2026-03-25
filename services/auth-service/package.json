@@ -1,5 +1,5 @@
 {
-    "name": "@zenwallet/auth-service",
+    "name": "@zenpay/auth-service",
     "version": "1.0.0",
     "private": true,
     "main": "dist/index.js",
@@ -10,8 +10,8 @@
         "start": "node dist/index.js"
     },
     "dependencies": {
-        "@zenwallet/db": "*",
-        "@zenwallet/shared-types": "*",
+        "@zenpay/db": "*",
+        "@zenpay/shared-types": "*",
         "express": "^4.21.2",
         "jsonwebtoken": "^9.0.2",
         "bcryptjs": "^3.0.2",
